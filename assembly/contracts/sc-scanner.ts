@@ -13,6 +13,7 @@ import {
 } from '@massalabs/massa-as-sdk';
 import {
   Args,
+  boolToByte,
   bytesToU64,
   stringToBytes,
   u64ToBytes,
@@ -21,7 +22,6 @@ import {
   onlyOwner,
   setOwner,
 } from '@massalabs/sc-standards/assembly/contracts/utils/ownership';
-import { OWNER_KEY } from '@massalabs/sc-standards/assembly/contracts/utils/ownership-internal';
 
 export {
   ownerAddress,
@@ -48,30 +48,44 @@ export function bytecodeOf(binaryArgs: StaticArray<u8>): StaticArray<u8> {
   const address = args.nextString().expect('address not provided');
   const bytecode = getBytecodeOf(new Address(address));
   const bytePrice = bytesToU64(Storage.get(KEY_BYTE_PRICE));
-  const length = bytecode.length;
-  const price = bytePrice * u64(length);
+  const price = bytePrice * u64(bytecode.length);
 
   generateEvent(createEvent('price', [price.toString()]));
 
-  if (Context.caller().toString() !== Storage.get(OWNER_KEY)) {
-    const callerPayment = Context.transferredCoins();
-    if (callerPayment < u64(price)) {
-      generateEvent('abort, not enough payment');
-      throw new Error('not enough payment');
-    }
-  }
-
-  if (getOriginOperationId() === null) {
-    // don't return the bytecode in a read-only call, user must pay
-    generateEvent('abort, no opId');
+  if (Context.transferredCoins() < u64(price) && !_isPaid(address)) {
+    generateEvent('abort, not enough payment');
     return [];
+  } else {
+    setPaid(address);
   }
 
-  generateEvent(createEvent('bytecode', [bytecode.toString()]));
   return bytecode;
 }
 
+// Internal
+
+function setPaid(address: string): void {
+  Storage.set(key(address), [1]);
+}
+
+function _isPaid(address: string): bool {
+  if (Storage.has(key(address))) {
+    return Storage.get(key(address)) !== null;
+  }
+  return false;
+}
+
+function key(address: string): StaticArray<u8> {
+  return stringToBytes('B' + address);
+}
+
 // Read
+
+export function isPaid(binaryArgs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(binaryArgs);
+  const address = args.nextString().expect('address not provided');
+  return boolToByte(_isPaid(address));
+}
 
 export function bytePrice(_: StaticArray<u8>): StaticArray<u8> {
   return Storage.get(KEY_BYTE_PRICE);

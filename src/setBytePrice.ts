@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 config();
 
 const fee = fromMAS('0.01');
-const contractAddress = 'AS12wgV3p5i7TEK94en9VoDAt33787MfG8Dtxpqz36DNS3hcGJBKE';
+const contractAddress = 'AS12duKkopjrnCG6L8cJkkh2Pax14aGATvihA9dqiz9d27EhhTXN2';
 
 const { client } = await getClient(process.env.WALLET_SECRET_KEY!);
 

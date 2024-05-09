@@ -6,6 +6,7 @@ import {
   bytePrice,
   selfDestruct,
   setBytecode,
+  isPaid,
 } from '../contracts/sc-scanner';
 import {
   mockAdminContext,
@@ -17,7 +18,12 @@ import {
   setBytecodeOf,
   Address,
 } from '@massalabs/massa-as-sdk';
-import { Args, stringToBytes, u64ToBytes } from '@massalabs/as-types';
+import {
+  Args,
+  boolToByte,
+  stringToBytes,
+  u64ToBytes,
+} from '@massalabs/as-types';
 
 const contractAddress = 'AS12BqZEQ6sByhRLyEuf0YbQmcF2PsDdkNNG1akBJu9XcjZA1eT';
 const adminAddress = 'AU1mhPhXCfh8afoNnbW91bXUVAmu8wU7u8v54yNTMvY7E52KBbz3';
@@ -47,17 +53,14 @@ const args = new Args().add(targetAddress).serialize();
 describe('bytecodeOf', () => {
   test('not enough payment', () => {
     mockTransferredCoins(0);
-    expect(() => {
-      bytecodeOf(args);
-    }).toThrow();
+    expect(bytecodeOf(args)).toStrictEqual([]);
   });
   test('success', () => {
     mockTransferredCoins(800000000000);
     expect(bytecodeOf(args)).toStrictEqual(bytecode);
-  });
-  test("admin don't pay", () => {
-    switchUser(adminAddress);
-    expect(bytecodeOf(args)).toStrictEqual(bytecode);
+    expect(isPaid(new Args().add(targetAddress).serialize())).toStrictEqual(
+      boolToByte(true),
+    );
   });
 });
 
@@ -107,6 +110,7 @@ describe('setBytecode', () => {
     switchUser(adminAddress);
     const newBytecode = stringToBytes('new bytecode');
     setBytecode(newBytecode);
+    mockTransferredCoins(1200000000000);
     expect(
       bytecodeOf(new Args().add(contractAddress).serialize()),
     ).toStrictEqual(newBytecode);
