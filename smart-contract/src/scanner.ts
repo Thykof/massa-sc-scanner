@@ -6,7 +6,9 @@ config();
 
 const fee = fromMAS('0.01');
 const contractAddress = 'AS12duKkopjrnCG6L8cJkkh2Pax14aGATvihA9dqiz9d27EhhTXN2';
-const targetAddress = 'AS1uhFrx6fJzbQKQPfda7ucPvSuVqUbRgN9NTeaBbo1vJy5urNHB'; // buildnet FT token test
+// const targetAddress = 'AS1uhFrx6fJzbQKQPfda7ucPvSuVqUbRgN9NTeaBbo1vJy5urNHB'; // buildnet FT token test paid
+const targetAddress = 'AS1263HjEjBdrZgM5Bf2Q9hGurXGocuwKAZL3myHzBLUJTYiuGnP7'; // buildnet FT token test paid
+// const targetAddress = 'AS1RpeGLxoWid7gyYFT2X2fe33RUqL8ZQAnpipzadnjEYqqJCzCG'; // buildnet FT token test not paid
 
 const { client } = await getClient(process.env.WALLET_SECRET_KEY!);
 
