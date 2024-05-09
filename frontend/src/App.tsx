@@ -4,6 +4,7 @@ import { useAccountStore } from './lib/ConnectMassaWallets/store';
 import { ConnectMassaWallet } from './lib/ConnectMassaWallets/components/ConnectMassaWallet';
 import { Button, Input, Toast } from '@massalabs/react-ui-kit';
 import { useState } from 'react';
+import { FAQ } from './FAQ';
 
 const mainnetAddress = '';
 const buildnetAddress = 'AS12duKkopjrnCG6L8cJkkh2Pax14aGATvihA9dqiz9d27EhhTXN2';
@@ -76,6 +77,10 @@ function App() {
               Explore this contract
             </Button>
           </div>
+        </div>
+        <div className="p-10 border-2 rounded-lg mb-4">
+          <h1 className="mas-subtitle text-center">FAQ</h1>
+          <FAQ />
         </div>
         <div>
           Github:{' '}
