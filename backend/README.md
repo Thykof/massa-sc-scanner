@@ -1,3 +1,29 @@
+# Mass Sc Scanner - Backend
+
+## API spec
+
+- /wasm2wat/:address
+  - POST
+    - Request
+      - body: { wasm: string }
+    - Response
+      - body: { wat: string }
+- /inspect/:address
+  - POST
+    - Request
+      - body: { wasm: string }
+    - Response
+      - body: { abis: string[], functions: string[], name: ?string }
+- /verify
+  - POST
+    - Request
+      - file: { zip }
+      - body: { contractAddress: string }
+    - Response
+      - body: { valid: boolean, message: string }
+
+---
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>

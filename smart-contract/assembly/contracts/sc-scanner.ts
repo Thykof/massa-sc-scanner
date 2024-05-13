@@ -6,7 +6,6 @@ import {
   createEvent,
   generateEvent,
   getBytecodeOf,
-  getOriginOperationId,
   Storage,
   transferCoins,
   getKeys,
@@ -62,6 +61,18 @@ export function bytecodeOf(binaryArgs: StaticArray<u8>): StaticArray<u8> {
   return bytecode;
 }
 
+// Read
+
+export function isPaid(binaryArgs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(binaryArgs);
+  const address = args.nextString().expect('address not provided');
+  return boolToByte(_isPaid(address));
+}
+
+export function bytePrice(_: StaticArray<u8>): StaticArray<u8> {
+  return Storage.get(KEY_BYTE_PRICE);
+}
+
 // Internal
 
 function setPaid(address: string): void {
@@ -77,18 +88,6 @@ function _isPaid(address: string): bool {
 
 function key(address: string): StaticArray<u8> {
   return stringToBytes('B' + address);
-}
-
-// Read
-
-export function isPaid(binaryArgs: StaticArray<u8>): StaticArray<u8> {
-  const args = new Args(binaryArgs);
-  const address = args.nextString().expect('address not provided');
-  return boolToByte(_isPaid(address));
-}
-
-export function bytePrice(_: StaticArray<u8>): StaticArray<u8> {
-  return Storage.get(KEY_BYTE_PRICE);
 }
 
 // Admin
