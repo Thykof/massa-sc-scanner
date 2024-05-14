@@ -1,12 +1,19 @@
 import {
+  bytePriceScan,
+  bytePriceVerification,
   constructor,
-  bytecodeOf,
+  initialBytePriceScan,
+  initialBytePriceVerification,
+  payScan,
+  verificationPriceOf,
   withdraw,
-  setBytePrice,
-  bytePrice,
-  selfDestruct,
-  setBytecode,
-  isPaid,
+  isPaidVerification,
+  scanPriceOf,
+  payVerification,
+  setScanBytePrice,
+  setVerificationBytePrice,
+  getWasm,
+  isPaidScan,
 } from '../contracts/sc-scanner';
 import {
   mockAdminContext,
@@ -14,13 +21,14 @@ import {
   resetStorage,
   mockTransferredCoins,
   mockBalance,
-  balanceOf,
   setBytecodeOf,
   Address,
+  balanceOf,
 } from '@massalabs/massa-as-sdk';
 import {
   Args,
-  boolToByte,
+  bytesToU64,
+  byteToBool,
   stringToBytes,
   u64ToBytes,
 } from '@massalabs/as-types';
@@ -50,29 +58,130 @@ beforeEach(() => {
 
 const args = new Args().add(targetAddress).serialize();
 
-describe('bytecodeOf', () => {
-  test('not enough payment', () => {
-    mockTransferredCoins(0);
-    expect(bytecodeOf(args)).toStrictEqual([]);
+describe('getWasm', () => {
+  throws('no payment', () => {
+    expect(getWasm(args)).toStrictEqual(bytecode);
+  });
+  test('payment scan', () => {
+    mockTransferredCoins(bytesToU64(scanPriceOf(args)));
+    payScan(args);
+    expect(getWasm(args)).toStrictEqual(bytecode);
+  });
+  test('payment verify', () => {
+    mockTransferredCoins(bytesToU64(verificationPriceOf(args)));
+    payVerification(args);
+    expect(getWasm(args)).toStrictEqual(bytecode);
+  });
+  test('payment both', () => {
+    mockTransferredCoins(bytesToU64(scanPriceOf(args)));
+    payScan(args);
+    mockTransferredCoins(bytesToU64(verificationPriceOf(args)));
+    payVerification(args);
+    expect(getWasm(args)).toStrictEqual(bytecode);
+  });
+});
+
+describe('payScan', () => {
+  throws('invalid payment', () => {
+    payScan(args);
   });
   test('success', () => {
-    mockTransferredCoins(800000000000);
-    expect(bytecodeOf(args)).toStrictEqual(bytecode);
-    expect(isPaid(new Args().add(targetAddress).serialize())).toStrictEqual(
-      boolToByte(true),
+    mockTransferredCoins(bytesToU64(scanPriceOf(args)));
+    payScan(args);
+    expect(byteToBool(isPaidScan(args))).toStrictEqual(true);
+  });
+  throws('already paid', () => {
+    mockTransferredCoins(bytesToU64(scanPriceOf(args)));
+    payScan(args);
+    payScan(args);
+  });
+});
+
+describe('payVerify', () => {
+  throws('invalid payment', () => {
+    payVerification(args);
+  });
+  test('success', () => {
+    mockTransferredCoins(bytesToU64(verificationPriceOf(args)));
+    payVerification(args);
+    expect(byteToBool(isPaidVerification(args))).toStrictEqual(true);
+  });
+  throws('already paid', () => {
+    mockTransferredCoins(bytesToU64(scanPriceOf(args)));
+    payVerification(args);
+    payVerification(args);
+  });
+});
+
+describe('scanPriceOf', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(bytesToU64(scanPriceOf(args))).toStrictEqual(
+      initialBytePriceScan * bytecode.length,
     );
   });
 });
 
-describe('setBytePrice', () => {
+describe('verificationPriceOf', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(bytesToU64(verificationPriceOf(args))).toStrictEqual(
+      initialBytePriceVerification * bytecode.length,
+    );
+  });
+});
+
+describe('bytePriceScan', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(bytesToU64(bytePriceScan(args))).toStrictEqual(initialBytePriceScan);
+  });
+});
+
+describe('bytePriceVerify', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(bytesToU64(bytePriceVerification(args))).toStrictEqual(
+      initialBytePriceVerification,
+    );
+  });
+});
+
+describe('isPaidScan', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(byteToBool(isPaidScan(args))).toStrictEqual(false);
+  });
+});
+
+describe('isPaidVerify', () => {
+  test('', () => {
+    mockTransferredCoins(0);
+    expect(byteToBool(isPaidVerification(args))).toStrictEqual(false);
+  });
+});
+
+describe('setScanBytePrice', () => {
   throws('not owner', () => {
-    setBytePrice(new Args().add(u64(1)).serialize());
+    setScanBytePrice(new Args().add(u64(1)).serialize());
   });
   test('success', () => {
     switchUser(adminAddress);
     const newPrice = u64(1_000_000_000);
-    setBytePrice(new Args().add(u64(newPrice)).serialize());
-    expect(bytePrice([])).toStrictEqual(u64ToBytes(newPrice));
+    setScanBytePrice(new Args().add(u64(newPrice)).serialize());
+    expect(bytePriceScan([])).toStrictEqual(u64ToBytes(newPrice));
+  });
+});
+
+describe('setVerificationBytePrice', () => {
+  throws('not owner', () => {
+    setVerificationBytePrice(new Args().add(u64(1)).serialize());
+  });
+  test('success', () => {
+    switchUser(adminAddress);
+    const newPrice = u64(1_000_000_000);
+    setVerificationBytePrice(new Args().add(u64(newPrice)).serialize());
+    expect(bytePriceVerification([])).toStrictEqual(u64ToBytes(newPrice));
   });
 });
 
@@ -86,33 +195,5 @@ describe('withdraw', () => {
     withdraw([]);
     expect(balanceOf(contractAddress)).toStrictEqual(0);
     expect(balanceOf(adminAddress)).toStrictEqual(1_000_000_000);
-  });
-});
-
-describe('selfDestruct', () => {
-  throws('not owner', () => {
-    selfDestruct([]);
-  });
-  test('success', () => {
-    switchUser(adminAddress);
-    mockBalance(contractAddress, 1_000_000_000);
-    selfDestruct([]);
-    expect(balanceOf(contractAddress)).toStrictEqual(0);
-    expect(balanceOf(adminAddress)).toStrictEqual(1_000_000_000);
-  });
-});
-
-describe('setBytecode', () => {
-  throws('not owner', () => {
-    setBytecode([]);
-  });
-  test('success', () => {
-    switchUser(adminAddress);
-    const newBytecode = stringToBytes('new bytecode');
-    setBytecode(newBytecode);
-    mockTransferredCoins(1200000000000);
-    expect(
-      bytecodeOf(new Args().add(contractAddress).serialize()),
-    ).toStrictEqual(newBytecode);
   });
 });

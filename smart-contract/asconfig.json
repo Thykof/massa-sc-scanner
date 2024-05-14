@@ -5,7 +5,7 @@
             "optimizeLevel": 3,
             "shrinkLevel": 3,
             "converge": true,
-            "noAssert": true,
+            "noAssert": false,
             "exportRuntime": false,
             "bindings": false
         }
