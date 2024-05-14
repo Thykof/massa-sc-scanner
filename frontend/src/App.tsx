@@ -1,45 +1,9 @@
-import { Args, MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
-import { useWriteSmartContract } from './hooks/scanner';
-import { useAccountStore } from './lib/ConnectMassaWallets/store';
 import { ConnectMassaWallet } from './lib/ConnectMassaWallets/components/ConnectMassaWallet';
-import { Button, Input, Toast } from '@massalabs/react-ui-kit';
-import { useState } from 'react';
-import { FAQ } from './FAQ';
-
-const mainnetAddress = '';
-const buildnetAddress = 'AS12duKkopjrnCG6L8cJkkh2Pax14aGATvihA9dqiz9d27EhhTXN2';
+import { Toast } from '@massalabs/react-ui-kit';
+import { FAQ } from './components/FAQ';
+import { Contract } from './components/Contract';
 
 function App() {
-  const { massaClient, chainId } = useAccountStore();
-  const isMainnet = chainId === MAINNET_CHAIN_ID;
-
-  const { callSmartContract, isPending, opId } = useWriteSmartContract(
-    massaClient,
-    isMainnet,
-  );
-  const contractAddress = isMainnet ? mainnetAddress : buildnetAddress;
-
-  const [targetAddress, setTargetAddress] = useState('');
-
-  const handleSubmit = () => {
-    callSmartContract(
-      'bytecodeOf',
-      contractAddress,
-      new Args().addString(targetAddress).serialize(),
-      {
-        pending: 'Pending...',
-        success: 'Success :)',
-        error: 'Failed :(',
-      },
-    )
-      .then((bytecode: Uint8Array) => {
-        console.log(bytecode.length);
-      })
-      .catch((e: Error) => {
-        console.error(e);
-      });
-  };
-
   return (
     <div className="w-full">
       <div className="p-10 md:max-w-4xl m-auto">
@@ -59,25 +23,7 @@ function App() {
         <div className="p-10 border-2 rounded-lg mb-4">
           <ConnectMassaWallet />
         </div>
-        <div className="flex justify-between w-full items-stretch mb-20">
-          <div className="flex flex-col w-[70%] mr-4">
-            <Input
-              placeholder="Enter a smart contract address"
-              value={targetAddress}
-              onChange={(e) => setTargetAddress(e.target.value)}
-            />
-          </div>
-          <div className="border-2 rounded-lg">
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                targetAddress === '' || !massaClient || (isPending && !!opId)
-              }
-            >
-              Explore this contract
-            </Button>
-          </div>
-        </div>
+        <Contract />
         <div className="p-10 border-2 rounded-lg mb-4">
           <h1 className="mas-subtitle text-center">FAQ</h1>
           <FAQ />

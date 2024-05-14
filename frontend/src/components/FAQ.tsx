@@ -29,7 +29,7 @@ export function FAQ() {
       </div>
       <div className="mb-4">
         <strong>What will be the next features?</strong>
-        <p>
+        <div>
           The next features will allow you to:
           <ul>
             <li>- download the wasm bytecode,</li>
@@ -44,7 +44,7 @@ export function FAQ() {
               deployed smart contract is the same as the source code.
             </li>
           </ul>
-        </p>
+        </div>
       </div>
     </div>
   );
