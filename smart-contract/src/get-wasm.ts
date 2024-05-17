@@ -5,8 +5,7 @@ import { config } from 'dotenv';
 config();
 
 const fee = fromMAS('0.01');
-const targetAddress = 'AS1dTb8iM9ED2adV6a26BMjg3sYQywiyLn33nJTRZ2fiY7FtRGSA'; // scan and verify paid
-// AS12S5taMtYjQgSMTK574feb2zEzXCM4XRmQmLGR4Gp88A5dTtcdR not paid
+const targetAddress = 'AS1dTb8iM9ED2adV6a26BMjg3sYQywiyLn33nJTRZ2fiY7FtRGSA';
 
 const { client } = await getClient(process.env.WALLET_SECRET_KEY!);
 

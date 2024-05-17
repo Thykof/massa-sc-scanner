@@ -11,9 +11,9 @@ import {
 const publicApi = getEnvVariable('JSON_RPC_URL_PUBLIC');
 const secretKey = getEnvVariable('WALLET_SECRET_KEY');
 // Define deployment parameters
-const chainId = CHAIN_ID.BuildNet; // Choose the chain ID corresponding to the network you want to deploy to
+const chainId = CHAIN_ID.MainNet; // Choose the chain ID corresponding to the network you want to deploy to
 const maxGas = MAX_GAS_DEPLOYMENT; // Gas for deployment Default is the maximum gas allowed for deployment
-const fees = fromMAS('0.01'); // Fees to be paid for deployment. Default is 0
+const fees = 0n; // Fees to be paid for deployment. Default is 0
 const waitFirstEvent = true;
 
 // Create an account using the private key
@@ -35,9 +35,9 @@ const deployerAccount = await WalletClient.getAccountFromSecretKey(secretKey);
     deployerAccount, // account deploying the smart contract(s)
     [
       {
-        data: getScByteCode('build', 'sc-verifier.wasm'), // smart contract bytecode
-        coins: fromMAS(0.1), // coins for deployment
-        args: new Args().addString('Test'), // arguments for deployment
+        data: getScByteCode('build', 'sc-scanner.wasm'), // smart contract bytecode
+        coins: fromMAS(0.0062 + 0.0014), // coins for deployment
+        args: new Args(), // arguments for deployment
       } as ISCData,
       // Additional smart contracts can be added here for deployment
     ],

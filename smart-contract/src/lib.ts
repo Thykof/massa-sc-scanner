@@ -84,12 +84,3 @@ export async function waitOp(
     events,
   };
 }
-
-export async function getBalance(
-  address: string,
-  client: Client,
-): Promise<bigint> {
-  return fromMAS(
-    (await client.publicApi().getAddresses([address]))[0].candidate_balance,
-  );
-}
