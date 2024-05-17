@@ -6,9 +6,9 @@ import {
   withdraw,
   priceOf,
   setBytePrice,
-  getWasm,
   isPaid,
-} from '../contracts/sc-scanner';
+  getWasm,
+} from '../contracts/sc-verifier';
 import {
   mockAdminContext,
   changeCallStack,
@@ -31,6 +31,8 @@ const contractAddress = 'AS12BqZEQ6sByhRLyEuf0YbQmcF2PsDdkNNG1akBJu9XcjZA1eT';
 const adminAddress = 'AU1mhPhXCfh8afoNnbW91bXUVAmu8wU7u8v54yNTMvY7E52KBbz3';
 const userAddress = 'AU12UBnqTHDQALpocVBnkPNy7y5CndUJQTLutaVDDFgMJcq5kQiKq';
 const targetAddress = 'AS1uhFrx6fJzbQKQPfda7ucPvSuVqUbRgN9NTeaBbo1vJy5urNHB';
+const hash = '1527f55e8ec0db3256a6fd3c4437f60d74d92d7d';
+const alteredHash = '152';
 
 const bytecode = stringToBytes('bytecode');
 const newBytecode = stringToBytes('new bytecode');
@@ -49,9 +51,10 @@ beforeEach(() => {
   switchUser(userAddress);
   mockBalance(targetAddress, 0);
   setBytecodeOf(new Address(targetAddress), bytecode);
+  mockTransferredCoins(0);
 });
 
-const args = new Args().add(targetAddress).serialize();
+const args = new Args().add(targetAddress).add(hash).serialize();
 
 describe('getWasm', () => {
   throws('no payment', () => {
@@ -66,9 +69,7 @@ describe('getWasm', () => {
 
 describe('pay', () => {
   throws('invalid payment', () => {
-    mockTransferredCoins(0);
     pay(args);
-    expect(byteToBool(isPaid(args))).toStrictEqual(true);
   });
   test('success', () => {
     mockTransferredCoins(bytesToU64(priceOf(args)));
@@ -80,11 +81,19 @@ describe('pay', () => {
     pay(args);
     pay(args);
   });
-  test('mutation', () => {
+  test('mutation bytecode length', () => {
     mockTransferredCoins(bytesToU64(priceOf(args)));
     pay(args);
     setBytecodeOf(new Address(targetAddress), newBytecode);
     expect(byteToBool(isPaid(args))).toStrictEqual(false);
+  });
+  test('mutation hash', () => {
+    mockTransferredCoins(bytesToU64(priceOf(args)));
+    pay(args);
+    setBytecodeOf(new Address(targetAddress), newBytecode);
+    expect(
+      byteToBool(isPaid(new Args().add(targetAddress).add(alteredHash).serialize())),
+    ).toStrictEqual(false);
   });
 });
 
