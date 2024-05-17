@@ -1,7 +1,7 @@
-import { ConnectMassaWallet } from './lib/ConnectMassaWallets/components/ConnectMassaWallet';
+import { ConnectMassaWallet } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
 import { Toast } from '@massalabs/react-ui-kit';
 import { FAQ } from './components/FAQ';
-import { Contract } from './components/Contract';
+import { Body } from './components/Body/Body';
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
         <div className="p-10 border-2 rounded-lg mb-4">
           <ConnectMassaWallet />
         </div>
-        <Contract />
+        <Body />
         <div className="p-10 border-2 rounded-lg mb-4">
           <h1 className="mas-subtitle text-center">FAQ</h1>
           <FAQ />
