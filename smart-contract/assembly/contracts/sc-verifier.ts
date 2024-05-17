@@ -11,9 +11,7 @@ import {
 import {
   Args,
   boolToByte,
-  bytesToI32,
   bytesToU64,
-  i32ToBytes,
   stringToBytes,
   u64ToBytes,
 } from '@massalabs/as-types';
@@ -29,7 +27,7 @@ export {
 
 const KEY_BYTE_PRICE = stringToBytes('BP');
 const PREFIX_PAID = 'P';
-export const initialBytePrice = 100_000_000_000;
+export const initialBytePrice = 1_000_000_000_000;
 
 export function constructor(_: StaticArray<u8>): StaticArray<u8> {
   // This line is important. It ensures that this function can't be called in the future.
@@ -47,13 +45,19 @@ export function constructor(_: StaticArray<u8>): StaticArray<u8> {
 export function pay(binaryArgs: StaticArray<u8>): void {
   const args = new Args(binaryArgs);
   const address = args.nextString().expect('address not provided');
+  const hash = args.nextString().expect('hash not provided');
   const byteCodeLength = getBytecodeLength(address);
-  assert(!getIsPaid(byteCodeLength, address), 'Already paid');
+  assert(!getIsPaid(byteCodeLength, address, hash), 'Already paid');
   const price = getPrice(address);
   checkPayment(price);
-  setPaid(byteCodeLength, address);
+  setPaid(byteCodeLength, address, hash);
   generateEvent(
-    createEvent('paid', [address, byteCodeLength.toString(), price.toString()]),
+    createEvent('paid', [
+      address,
+      byteCodeLength.toString(),
+      hash,
+      price.toString(),
+    ]),
   );
 }
 
@@ -62,8 +66,9 @@ export function pay(binaryArgs: StaticArray<u8>): void {
 export function getWasm(binaryArgs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(binaryArgs);
   const address = args.nextString().expect('address not provided');
+  const hash = args.nextString().expect('hash not provided');
   const bytecode = getBytecodeOf(new Address(address));
-  assert(getIsPaid(bytecode.length, address), 'Not paid');
+  assert(getIsPaid(bytecode.length, address, hash), 'Not paid');
 
   return bytecode;
 }
@@ -71,7 +76,17 @@ export function getWasm(binaryArgs: StaticArray<u8>): StaticArray<u8> {
 export function isPaid(binaryArgs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(binaryArgs);
   const address = args.nextString().expect('address not provided');
-  return boolToByte(getIsPaid(getBytecodeLength(address), address));
+  const hash = args.nextString().expect('hash not provided');
+  return boolToByte(getIsPaid(getBytecodeLength(address), address, hash));
+}
+
+export function paidInfo(binaryArgs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(binaryArgs);
+  const address = args.nextString().expect('address not provided');
+  if (!Storage.has(getKey(address))) {
+    return [];
+  }
+  return Storage.get(getKey(address));
 }
 
 export function bytePrice(_: StaticArray<u8>): StaticArray<u8> {
@@ -95,14 +110,27 @@ function getPrice(address: string): u64 {
   return bytePrice * u64(getBytecodeLength(address));
 }
 
-function setPaid(byteCodeLength: i32, address: string): void {
-  Storage.set(getKey(address), i32ToBytes(byteCodeLength));
+function setPaid(byteCodeLength: i32, address: string, hash: string): void {
+  // TODO: allow to pay for multiple hashes
+  // and remove the byteCodeLength
+  Storage.set(
+    getKey(address),
+    new Args().add(byteCodeLength).add(hash).serialize(),
+  );
 }
 
-function getIsPaid(byteCodeLength: i32, address: string): bool {
+function getIsPaid(byteCodeLength: i32, address: string, hash: string): bool {
   const key = getKey(address);
   if (Storage.has(key)) {
-    return bytesToI32(Storage.get(key)) >= byteCodeLength;
+    const value = new Args(Storage.get(key));
+    const storedByteCodeLength = value
+      .nextI32()
+      .expect('byteCodeLength not stored');
+    const storedHash = value.nextString().expect('hash not stored');
+    if (storedByteCodeLength === byteCodeLength && storedHash === hash) {
+      return true;
+    }
+    generateEvent(createEvent('smart contract has mutated', [address]));
   }
   return false;
 }
