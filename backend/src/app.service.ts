@@ -1,97 +1,135 @@
-import {
-  Args,
-  BUILDNET_CHAIN_ID,
-  Client,
-  ClientFactory,
-  DefaultProviderUrls,
-  MAINNET_CHAIN_ID,
-} from '@massalabs/massa-web3';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import { SmartContract } from './database/entities/SmartContract';
+import { ClientService } from './client/client.service';
+import * as path from 'path';
+import * as AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as os from 'os';
-import * as fs from 'fs';
+import { DatabaseService } from './database/database.service';
 
-const execAsync = promisify(exec);
+const execPromise = promisify(exec);
 
 @Injectable()
 export class AppService {
-  public client: Client;
-  public contractAddress: string;
+  private readonly logger = new Logger('SERVICE');
+  constructor(
+    private readonly clientService: ClientService,
+    private readonly databaseService: DatabaseService,
+  ) {}
 
-  public async onModuleInit(): Promise<void> {
-    if (process.env.CHAIN_ID === MAINNET_CHAIN_ID.toString()) {
-      this.client = await ClientFactory.createDefaultClient(
-        DefaultProviderUrls.MAINNET,
-        MAINNET_CHAIN_ID,
-      );
-      this.contractAddress = '';
-    } else {
-      this.client = await ClientFactory.createDefaultClient(
-        DefaultProviderUrls.BUILDNET,
-        BUILDNET_CHAIN_ID,
-      );
-      this.contractAddress =
-        'AS12duKkopjrnCG6L8cJkkh2Pax14aGATvihA9dqiz9d27EhhTXN2';
+  public async verify(address: string, file: Express.Multer.File) {
+    if (!address) {
+      throw new HttpException('address is required', HttpStatus.BAD_REQUEST);
     }
+    if (await this.databaseService.isVerified(address)) {
+      throw new HttpException('already verified', HttpStatus.FORBIDDEN);
+    }
+    if (!(await this.clientService.isPaid(address))) {
+      throw new HttpException('pay to verify', HttpStatus.FORBIDDEN);
+    }
+
+    const { zipHash, filename } = this.storeZip(file);
+    const deployedWasm = await this.clientService.getWasm(address);
+    const deployedWasmHash = crypto.hash('sha1', deployedWasm, 'hex');
+
+    const contractName = this.clientService.sourceMapName(
+      this.clientService.wasm2utf8(deployedWasm),
+    );
+
+    const { providedWasmHash, output } = await this.processZip(
+      file,
+      zipHash,
+      contractName,
+    );
+
+    const smartContract = new SmartContract(
+      address,
+      contractName,
+      deployedWasmHash,
+      providedWasmHash,
+      filename,
+      output,
+    );
+    this.databaseService.saveSmartContract(smartContract);
+
+    return {
+      zipHash,
+      zipSize: file.buffer.length,
+      contractName,
+      address,
+      deployedWasmHash,
+      providedWasmHash,
+      sourceCodeValid: deployedWasmHash === providedWasmHash,
+    };
   }
 
-  async address2wasm(address: string): Promise<Uint8Array> {
-    const readOnlyResult = await this.client
-      .smartContracts()
-      .readSmartContract({
-        targetAddress: this.contractAddress,
-        targetFunction: 'bytecodeOf',
-        parameter: new Args().addString(address).serialize(),
-      });
-    if (readOnlyResult.returnValue.length === 0) {
+  async processZip(
+    file: Express.Multer.File,
+    zipHash: string,
+    contractName: string,
+  ) {
+    const zip = new AdmZip(file.buffer);
+    const outputDir = './unzipped';
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    const workingDir = path.join(outputDir, zipHash);
+    zip.extractAllTo(workingDir, true);
+
+    let output = '';
+
+    try {
+      const result = await this.executeCommand(workingDir, 'npm install');
+      output += result.output + '\n';
+    } catch (error) {
       throw new HttpException(
-        'Empty bytecode, pay first',
-        HttpStatus.FORBIDDEN,
+        'error processing zip: npm install',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    try {
+      const result = await this.executeCommand(workingDir, 'npm run build');
+      output += result.output + '\n';
+    } catch (error) {
+      throw new HttpException(
+        'error processing zip: npm run build',
+        HttpStatus.BAD_REQUEST,
       );
     }
 
-    return readOnlyResult.returnValue;
+    const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
+    const binary = fs.readFileSync(binaryPath);
+    const providedWasmHash = this.hashFile(binary);
+
+    return { providedWasmHash, output };
   }
 
-  async wasm2wat(wasm: Uint8Array): Promise<string> {
-    const dir = os.tmpdir();
-    const filenameWasm = `${dir}/sc.wasm`;
-    fs.writeFileSync(filenameWasm, wasm);
-    const filenameWat = `${dir}/sc.wat`;
-    await execAsync(`wasm2wat ${filenameWasm} -o ${filenameWat}`);
-    const wat = fs.readFileSync(filenameWat, 'utf8');
-
-    return wat;
+  private async executeCommand(directory: string, command: string) {
+    try {
+      const { stdout, stderr } = await execPromise(command, { cwd: directory });
+      // TODO: how to handle the error?
+      return { output: stderr + '\n' + stdout };
+    } catch (err) {
+      this.logger.error(`Failed to execute command: ...`);
+      // this.logger.error(`Failed to execute command: ${err.message}`);
+      throw err;
+    }
   }
 
-  wasm2utf8(wasm: Uint8Array): string {
-    const buffer = Buffer.from(wasm);
+  private storeZip(file: Express.Multer.File) {
+    const zipHash = this.hashFile(file.buffer);
+    if (!fs.existsSync('./upload')) {
+      fs.mkdirSync('./upload');
+    }
+    const filename = `${zipHash}-${new Date().getTime()}.zip`;
+    fs.writeFileSync(`./upload/${filename}`, file.buffer);
 
-    return buffer.toString('utf-8');
+    return { zipHash, filename };
   }
 
-  importedABIs(wat: string): string[] {
-    const regex = /assembly_script_(\w+)/gi;
-
-    const matches = [...wat.matchAll(regex)];
-
-    return matches.map((match) => match[1]);
-  }
-
-  exportedFunctions(wat: string): string[] {
-    const regex = /\(export "(\w+)"/gi;
-
-    const matches = [...wat.matchAll(regex)];
-
-    return matches.map((match) => match[1]);
-  }
-
-  sourceMapName(wasm: string): string {
-    const regex = /sourceMappingURL.*\.\/(.+)\.wasm\.map/gi;
-
-    const matches = [...wasm.matchAll(regex)];
-
-    return matches.map((match) => match[1])[0];
+  private hashFile(buffer: Buffer) {
+    return crypto.createHash('sha1').update(buffer).digest('hex');
   }
 }
