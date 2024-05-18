@@ -32,7 +32,7 @@ export class AppService {
 
     const { zipHash, filename } = this.storeZip(file);
     const deployedWasm = await this.clientService.getWasm(address);
-    const deployedWasmHash = crypto.hash('sha1', deployedWasm, 'hex');
+    const deployedWasmHash = this.hashBytes(deployedWasm);
 
     const contractName = this.clientService.sourceMapName(
       this.clientService.wasm2utf8(deployedWasm),
@@ -131,5 +131,9 @@ export class AppService {
 
   private hashFile(buffer: Buffer) {
     return crypto.createHash('sha1').update(buffer).digest('hex');
+  }
+
+  private hashBytes(bytes: Uint8Array) {
+    return crypto.createHash('sha1').update(bytes).digest('hex');
   }
 }
