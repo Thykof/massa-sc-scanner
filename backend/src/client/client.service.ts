@@ -32,7 +32,7 @@ export class ClientService {
         DefaultProviderUrls.BUILDNET,
         BUILDNET_CHAIN_ID,
       );
-      this.contractAddress = process.env.SC_ADDRESS_SCANNER_BUILDNER;
+      this.contractAddress = process.env.SC_ADDRESS_SCANNER_BUILDNET;
     }
   }
 

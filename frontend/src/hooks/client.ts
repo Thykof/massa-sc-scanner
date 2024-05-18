@@ -31,7 +31,7 @@ export function useClient() {
 
   const contractAddressScanner = isMainnet
     ? import.meta.env.VITE_SC_ADDRESS_SCANNER_MAINNET
-    : import.meta.env.VITE_SC_ADDRESS_SCANNER_BUILDNER;
+    : import.meta.env.VITE_SC_ADDRESS_SCANNER_BUILDNET;
   const contractAddressVerifier = isMainnet
     ? import.meta.env.VITE_SC_ADDRESS_VERIFIER_MAINNET
     : import.meta.env.VITE_SC_ADDRESS_VERIFIER_BUILDNET;
