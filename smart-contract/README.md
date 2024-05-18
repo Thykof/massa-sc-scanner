@@ -15,8 +15,8 @@ Buildnet address for the verifier contract: AS1txUufiS7XkHE9caT5PEdDnaoiTzUgBbaD
 
 (Scanner and Verifier are the same bytecode so the same contract in buildnet).
 
-Mainnet address for the scanner contract: AS1299bGi75xZ9U2rXTFyX4JzqPekk7PvCFAZ8UvGMdkfgmyFu9pg.
-Mainnet address for the verifier contract: AS12Yoh9A4BwDRqDCSw79JU7mkJCMsCVsDKRe2g5P66fc9NK72zDb.
+Mainnet address for the scanner contract: AS121YPZJSZAFy4kss95jez1WRF16o4PRq8GE8HyvpHaQYt2spDE2.
+Mainnet address for the verifier contract: AS126zKYJS3bH5bkoVSvR6y534iDiZYuUB2R1ZBmB1q2yi8u5GsLC.
 
 ## Unit tests
 

@@ -30,6 +30,7 @@ export {
 const KEY_BYTE_PRICE = stringToBytes('BP');
 const PREFIX_PAID = 'P';
 export const initialBytePrice = 100_000_000_000;
+const STORAGE_BYTE_COST = 100_000;
 
 export function constructor(_: StaticArray<u8>): StaticArray<u8> {
   // This line is important. It ensures that this function can't be called in the future.
@@ -92,7 +93,7 @@ function getBytecodeLength(address: string): i32 {
 
 function getPrice(address: string): u64 {
   const bytePrice = bytesToU64(Storage.get(KEY_BYTE_PRICE));
-  return bytePrice * u64(getBytecodeLength(address));
+  return bytePrice * u64(getBytecodeLength(address)) + storageCost(address);
 }
 
 function setPaid(byteCodeLength: i32, address: string): void {
@@ -114,6 +115,10 @@ function getKey(address: string): StaticArray<u8> {
 function checkPayment(price: u64): void {
   const payment = Context.transferredCoins();
   assert(payment === price, `Invalid payment: ${payment}, expected ${price}`);
+}
+
+function storageCost(address: string): u64 {
+  return u64(4 + 1 + address.length + 4) * STORAGE_BYTE_COST;
 }
 
 // Admin write

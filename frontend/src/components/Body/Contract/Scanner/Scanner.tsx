@@ -24,6 +24,14 @@ export function Scanner(props: ScannerProps) {
   const { callSmartContract } = useWriteSmartContract(client, isMainnet);
 
   const handlePayToScan = () => {
+    if (!scanPriceOf) {
+      console.error('scanPriceOf is not defined');
+      return;
+    }
+    if (!scToInspect) {
+      console.error('scToInspect is not defined');
+      return;
+    }
     callSmartContract(
       'pay',
       contractAddressScanner,

@@ -13,7 +13,7 @@ export function Form(props: FormProps) {
 
   return (
     <div className="flex justify-between w-full items-stretch ">
-      <div className="flex flex-col w-[70%] mr-4">
+      <div className="flex flex-col grow mr-4">
         <Input
           placeholder="Enter a smart contract address"
           value={scToInspect}

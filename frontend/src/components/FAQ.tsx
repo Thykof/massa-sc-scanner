@@ -70,12 +70,14 @@ export function FAQ() {
           To see the proof that the bytecode of a smart contract corresponds to
           the source code, you will soon be able to download the zip file and
           the deployed bytecode and perform the commands:
-          <pre>npm install</pre>
-          <pre>npm build</pre>
+        </p>
+        <pre>npm install</pre>
+        <pre>npm build</pre>
+        <p>
           Then you can generate the sha1 of the wasm file and compare it with
           the sha1 of the deployed smart contract:
-          <pre>shasum build/*.wasm</pre>
-        </p>
+        </p>{' '}
+        <pre>shasum build/*.wasm</pre>
       </div>
       <div className="mb-4">
         <strong>What will be the next features?</strong>
