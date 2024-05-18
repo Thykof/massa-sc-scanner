@@ -33,7 +33,7 @@ export class AppController {
   // curl -F "file=@smart-contract.zip;type=application/zip" -F "address=AS12FWciBxUsTcbz6xRyKfdcCr6Xbd9qZrVgJQ5n5DUbFCfV3ie61" http://localhost:3000/verify
   @Post('verify')
   @UseInterceptors(FileInterceptor('file'))
-  uploadFileAndPassValidation(
+  async uploadFileAndPassValidation(
     @Body() body: VerifyDto,
     @UploadedFile(
       new ParseFilePipeBuilder()
@@ -52,13 +52,11 @@ export class AppController {
   ) {
     try {
       this.logger.log(`verify ${body.address}`);
-      return this.appService.verify(body.address, file);
+      return await this.appService.verify(body.address, file);
     } catch (error) {
-      this.logger.error(error);
-      throw new HttpException(
-        `error: ${error}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      const msg = `fail to verify: ${error.message}`;
+      this.logger.error(msg);
+      throw new HttpException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
