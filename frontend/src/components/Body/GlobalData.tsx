@@ -1,14 +1,8 @@
 import { formatAmount } from '@massalabs/react-ui-kit';
-import { useReadScanner } from '../../hooks/read-sc';
+import { useReadGlobal } from '../../hooks/read-sc';
 
-interface GlobalDataProps {
-  scToInspect: string;
-}
-
-export function GlobalData(props: GlobalDataProps) {
-  const { scToInspect } = props;
-
-  const { bytePriceScan, bytePriceVerification } = useReadScanner(scToInspect);
+export function GlobalData() {
+  const { bytePriceScan, bytePriceVerification } = useReadGlobal();
 
   let formattedBytePriceScan = '...';
   if (bytePriceScan) {

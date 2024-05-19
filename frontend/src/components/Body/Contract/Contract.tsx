@@ -1,20 +1,26 @@
-import { useReadScanner } from '../../../hooks/read-sc';
 import { Button } from '@massalabs/react-ui-kit';
 import { useClient } from '../../../hooks/client';
 import { Verifier } from './Verifier/Verifier';
 import { Scanner } from './Scanner/Scanner';
 
 interface ContractProps {
+  scanPriceOf?: bigint;
+  isPaidScan?: boolean;
+  verificationPriceOf?: bigint;
+  isPaidVerification?: boolean;
   scToInspect: string;
 }
 
 export function Contract(props: ContractProps) {
-  const { scToInspect } = props;
+  const {
+    scanPriceOf,
+    isPaidScan,
+    verificationPriceOf,
+    isPaidVerification,
+    scToInspect,
+  } = props;
   const { client, isMainnet, contractAddressScanner, contractAddressVerifier } =
     useClient();
-
-  const { scanPriceOf, isPaidScan, verificationPriceOf, isPaidVerification } =
-    useReadScanner(scToInspect);
 
   const explorerURL = isMainnet
     ? `https://explorer.massa.net/mainnet/address/${scToInspect}`

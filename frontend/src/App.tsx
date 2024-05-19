@@ -30,17 +30,36 @@ function App() {
         </div>
         <div>
           Github:{' '}
-          <a href="https://github.com/Thykof/massa-sc-scanner">
+          <a
+            className="underline cursor-pointer"
+            href="https://github.com/Thykof/massa-sc-scanner"
+          >
             https://github.com/Thykof/massa-sc-scanner
           </a>
           <br />
           Join Dusa:{' '}
-          <a href="https://app.dusa.io/trade?ref=qmf57z">
+          <a
+            className="underline cursor-pointer"
+            href="https://app.dusa.io/trade?ref=qmf57z"
+          >
             https://app.dusa.io/trade?ref=qmf57z
           </a>
           <br />
           Delegated stacking:{' '}
-          <a href="https://massa-blast.net">https://massa-blast.net</a>
+          <a
+            className="underline cursor-pointer"
+            href="https://massa-blast.net"
+          >
+            https://massa-blast.net
+          </a>
+          <br />
+          Mainnet faucet?{' '}
+          <a
+            className="underline cursor-pointer"
+            href="https://fauxceeet.netlify.app"
+          >
+            https://fauxceeet.netlify.app
+          </a>
         </div>
       </div>
       <div className="theme-dark">

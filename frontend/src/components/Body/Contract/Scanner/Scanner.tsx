@@ -53,33 +53,42 @@ export function Scanner(props: ScannerProps) {
   }
 
   return (
-    <div className="p-5">
-      <h2 className="mas-subtitle">Scanner</h2>
-      <p>Scanner is coming soon</p>
+    <div className="p-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <h2 className="mas-subtitle">Scanner</h2>
+        <p>
+          <i>Scanner is coming soon</i>
+        </p>
 
-      <p>
-        The price to scan this smart contract is {formattedScanPriceOf} MAS.
-      </p>
-      <p>
-        {!isPaidScan
-          ? 'You have to paid to scan this smart contract.'
-          : 'Someone has paid to scan this smart contract.'}
-      </p>
-      <div className="flex flex-row items-center gap-4 mt-2 mb-4">
-        <Button onClick={() => {}} disabled={!isPaidScan}>
-          Scan (soon)
-        </Button>
-        <Button onClick={handlePayToScan} disabled={isPaidScan}>
-          Pay to scan
-        </Button>
+        <p>
+          The price to scan this smart contract is {formattedScanPriceOf} MAS.
+        </p>
+        <p>
+          {!isPaidScan
+            ? 'You have to paid to scan this smart contract.'
+            : 'Someone has paid to scan this smart contract.'}
+        </p>
       </div>
-      <div className="flex flex-row items-center gap-4 mt-2 mb-4">
-        <Button onClick={() => {}} disabled={!isPaidScan || true}>
-          Download wasm (soon)
-        </Button>
-        <Button onClick={() => {}} disabled={!isPaidScan || true}>
-          Download wat (soon)
-        </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-row items-center gap-4">
+          <Button onClick={() => {}} disabled={!isPaidScan}>
+            Scan (soon)
+          </Button>
+          <Button
+            onClick={handlePayToScan}
+            disabled={isPaidScan || !scanPriceOf || !scToInspect}
+          >
+            Pay to scan
+          </Button>
+        </div>
+        <div className="flex flex-row items-center gap-4">
+          <Button onClick={() => {}} disabled={!isPaidScan || true}>
+            Download wasm (soon)
+          </Button>
+          <Button onClick={() => {}} disabled={!isPaidScan || true}>
+            Download wat (soon)
+          </Button>
+        </div>
       </div>
     </div>
   );

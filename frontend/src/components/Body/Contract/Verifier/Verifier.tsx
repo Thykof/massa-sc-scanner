@@ -90,6 +90,14 @@ export function Verifier(props: VerifierProps) {
   }, [dataMutate, isError]);
 
   const handlePayToVerify = () => {
+    if (!verificationPriceOf) {
+      console.error('scanPriceOf is not defined');
+      return;
+    }
+    if (!scToInspect) {
+      console.error('scToInspect is not defined');
+      return;
+    }
     callSmartContract(
       'pay',
       contractAddressVerifier,
@@ -154,7 +162,12 @@ export function Verifier(props: VerifierProps) {
           >
             Verify
           </Button>
-          <Button onClick={handlePayToVerify} disabled={isPaidVerification}>
+          <Button
+            onClick={handlePayToVerify}
+            disabled={
+              isPaidVerification || !verificationPriceOf || !scToInspect
+            }
+          >
             Pay to verify
           </Button>
         </div>
