@@ -4,6 +4,7 @@ import {
   fromMAS,
   IAccount,
   IBaseAccount,
+  IEvent,
   ProviderType,
   PublicApiClient,
   WalletClient,
@@ -42,11 +43,16 @@ export const getClient = async (
   };
 };
 
+export interface WaitOpResult {
+  status: EOperationStatus;
+  events: IEvent[];
+}
+
 export async function waitOp(
   client: Client,
   operationId: string,
   untilFinal = true,
-) {
+): Promise<WaitOpResult> {
   const status = await client
     .smartContracts()
     .awaitMultipleRequiredOperationStatus(
