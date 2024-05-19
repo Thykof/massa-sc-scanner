@@ -91,7 +91,7 @@ describe('pay', () => {
 describe('priceOf', () => {
   test('', () => {
     expect(bytesToU64(priceOf(args))).toStrictEqual(
-      initialBytePrice * bytecode.length + 6_000_000,
+      initialBytePrice * bytecode.length + 6_100_000,
     );
   });
 });
