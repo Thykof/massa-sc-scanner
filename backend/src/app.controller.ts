@@ -63,7 +63,7 @@ export class AppController {
   @Get('verified/:address')
   async verified(@Param('address') address: string) {
     return {
-      sourceCodeValid: this.databaseService.isVerified(address),
+      sourceCodeValid: await this.databaseService.isVerified(address),
     };
   }
 
