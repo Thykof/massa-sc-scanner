@@ -2,7 +2,7 @@ import { Args, Client } from '@massalabs/massa-web3';
 import { Button, DragDrop, formatAmount, toast } from '@massalabs/react-ui-kit';
 import { useWriteSmartContract } from '@massalabs/react-ui-kit/src/lib/massa-react/hooks/useWriteSmartContract';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../../services/apiClient';
+import { apiClient, fetchFile } from '../../../../services/apiClient';
 import { useEffect, useState } from 'react';
 import { AxiosResponse } from 'axios';
 
@@ -52,7 +52,7 @@ export function Verifier(props: VerifierProps) {
     },
   });
 
-  const url = `/verified/${scToInspect}`;
+  const url = `${scToInspect}/verified`;
   const { data: dataVerified } = useQuery<VerifiedData, undefined>({
     queryKey: ['', url],
     queryFn: async () => {
@@ -63,6 +63,28 @@ export function Verifier(props: VerifierProps) {
       return data;
     },
   });
+
+  const { refetch: startZipDownload } = useQuery<Blob>({
+    queryKey: [scToInspect],
+    queryFn: async () => {
+      const response = await fetchFile(`${apiClient.getUri()}/${scToInspect}`);
+      return response;
+    },
+    enabled: false,
+  });
+
+  const handleDownload = () => {
+    startZipDownload().then(({ data }) => {
+      if (data) {
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `source-code-verified-${scToInspect}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    });
+  };
 
   const isVerified = dataVerified?.sourceCodeValid;
 
@@ -172,8 +194,13 @@ export function Verifier(props: VerifierProps) {
           </Button>
         </div>
         <div className="flex flex-row items-center gap-4">
-          <Button onClick={() => {}} disabled={!isPaidVerification || true}>
-            Download ZIP (soon)
+          <Button
+            onClick={() => {
+              handleDownload();
+            }}
+            disabled={!isPaidVerification}
+          >
+            Download ZIP
           </Button>
           <Button onClick={() => {}} disabled={!isPaidVerification || true}>
             See proof (soon)
