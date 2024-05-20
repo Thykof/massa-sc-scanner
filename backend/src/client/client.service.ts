@@ -37,6 +37,9 @@ export class ClientService {
   }
 
   async isPaid(address: string): Promise<boolean> {
+    console.log('this.contractAddress ', this.contractAddress);
+    console.log('address ', address);
+
     const callData = {
       targetAddress: this.contractAddress,
       parameter: new Args().addString(address),

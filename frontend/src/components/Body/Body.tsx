@@ -15,6 +15,8 @@ export function Body() {
     error,
   } = useReadScanner(scToInspect);
 
+  console.log(isPaidVerification);
+
   return (
     <div className="flex flex-col gap-6 border-2 rounded-lg p-10 mb-20">
       <GlobalData />
