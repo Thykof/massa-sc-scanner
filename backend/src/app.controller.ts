@@ -10,12 +10,14 @@ import {
   Body,
   Logger,
   HttpException,
+  Res,
 } from '@nestjs/common';
-
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ClientService } from './client/client.service';
 import { AppService } from './app.service';
 import { DatabaseService } from './database/database.service';
+import { ZIP_MIME_TYPE } from './const';
 
 class VerifyDto {
   address: string;
@@ -38,7 +40,7 @@ export class AppController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: 'application/zip',
+          fileType: ZIP_MIME_TYPE,
         })
         .addMaxSizeValidator({
           maxSize: 1000 * 1000 * 3,
@@ -54,20 +56,41 @@ export class AppController {
       this.logger.log(`verify ${body.address}`);
       return await this.appService.verify(body.address, file);
     } catch (error) {
-      const msg = `fail to verify: ${error.message}`;
-      this.logger.error(msg);
-      throw new HttpException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(error.message);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        'internal error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  @Get('verified/:address')
+  // curl http://localhost:3000/AS.../download
+  @Get(':address/download')
+  async downloadFile(@Param('address') address: string, @Res() res: Response) {
+    const { data, filename } = await this.appService.getVerifiedZip(address);
+
+    if (!data) {
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    }
+
+    res.set({
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Type': ZIP_MIME_TYPE,
+    });
+
+    res.end(Buffer.from(data.toString('base64'), 'base64'), 'binary');
+  }
+
+  // curl http://localhost:3000/AS.../verified
+  @Get(':address/verified')
   async verified(@Param('address') address: string) {
     return {
       sourceCodeValid: await this.databaseService.isVerified(address),
     };
   }
 
-  @Get('inspect/:address')
+  @Get(':address/inspect')
   async inspect(@Param('address') address: string) {
     return {
       address,
@@ -77,14 +100,14 @@ export class AppController {
     };
   }
 
-  @Get('wasm2wat/:address')
+  @Get(':address/wasm2wat')
   async wasm2wat(@Param('address') address: string): Promise<string> {
     return this.clientService.wasm2wat(
       await this.clientService.address2wasm(address),
     );
   }
 
-  @Get('abis/:address')
+  @Get(':address/abis')
   async abis(@Param('address') address: string): Promise<string[]> {
     return this.clientService.importedABIs(
       await this.clientService.wasm2wat(
@@ -93,7 +116,7 @@ export class AppController {
     );
   }
 
-  @Get('functions/:address')
+  @Get(':address/functions')
   async functions(@Param('address') address: string): Promise<string[]> {
     return this.clientService.exportedFunctions(
       await this.clientService.wasm2wat(
@@ -102,7 +125,7 @@ export class AppController {
     );
   }
 
-  @Get('name/:address')
+  @Get(':address/name')
   async name(@Param('address') address: string): Promise<string> {
     return this.clientService.sourceMapName(
       this.clientService.wasm2utf8(

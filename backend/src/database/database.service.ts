@@ -21,6 +21,7 @@ export class DatabaseService {
   public async isVerified(address: string) {
     const smartContracts = await this.getSmartContracts(address);
     for (const smartContract of smartContracts) {
+      // TODO: refactor: use the mongo db query to check if the deployedWasmHash is the same as the providedWasmHash
       if (smartContract.deployedWasmHash === smartContract.providedWasmHash) {
         return true;
       }

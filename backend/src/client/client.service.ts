@@ -18,7 +18,8 @@ const execAsync = promisify(exec);
 @Injectable()
 export class ClientService {
   public client: Client;
-  public contractAddress: string;
+  public scannerAddress: string;
+  public verifierAddress: string;
 
   public async onModuleInit(): Promise<void> {
     if (process.env.CHAIN_ID === MAINNET_CHAIN_ID.toString()) {
@@ -26,22 +27,21 @@ export class ClientService {
         DefaultProviderUrls.MAINNET,
         MAINNET_CHAIN_ID,
       );
-      this.contractAddress = process.env.SC_ADDRESS_SCANNER_MAINNET;
+      this.scannerAddress = process.env.SC_ADDRESS_SCANNER_MAINNET;
+      this.verifierAddress = process.env.SC_ADDRESS_VERIFIER_MAINNET;
     } else {
       this.client = await ClientFactory.createDefaultClient(
         DefaultProviderUrls.BUILDNET,
         BUILDNET_CHAIN_ID,
       );
-      this.contractAddress = process.env.SC_ADDRESS_SCANNER_BUILDNET;
+      this.scannerAddress = process.env.SC_ADDRESS_SCANNER_BUILDNET;
+      this.verifierAddress = process.env.SC_ADDRESS_VERIFIER_BUILDNET;
     }
   }
 
   async isPaid(address: string): Promise<boolean> {
-    console.log('this.contractAddress ', this.contractAddress);
-    console.log('address ', address);
-
     const callData = {
-      targetAddress: this.contractAddress,
+      targetAddress: this.verifierAddress,
       parameter: new Args().addString(address),
     };
     const readOnlyResult = await this.client
@@ -52,7 +52,7 @@ export class ClientService {
 
   async getWasm(address: string): Promise<Uint8Array> {
     const callData = {
-      targetAddress: this.contractAddress,
+      targetAddress: this.verifierAddress,
       parameter: new Args().addString(address),
     };
     const readOnlyResult = await this.client
@@ -65,7 +65,7 @@ export class ClientService {
     const readOnlyResult = await this.client
       .smartContracts()
       .readSmartContract({
-        targetAddress: this.contractAddress,
+        targetAddress: this.verifierAddress,
         targetFunction: 'bytecodeOf',
         parameter: new Args().addString(address).serialize(),
       });

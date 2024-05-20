@@ -15,6 +15,9 @@ export class SmartContract extends BaseEntity {
     deployedWasmHash = '',
     providedWasmHash = '',
     zipFilename = '',
+    zipHash = '',
+    zipSize = 0,
+    zipData: Buffer = Buffer.from(''),
     output = '',
     createdAt: Date = new Date(),
   ) {
@@ -24,6 +27,9 @@ export class SmartContract extends BaseEntity {
     this.deployedWasmHash = deployedWasmHash;
     this.providedWasmHash = providedWasmHash;
     this.zipFilename = zipFilename;
+    this.zipHash = zipHash;
+    this.zipSize = zipSize;
+    this.zipData = zipData;
     this.output = output;
     this.createdAt = createdAt;
   }
@@ -35,6 +41,9 @@ export class SmartContract extends BaseEntity {
   @Column() deployedWasmHash: string;
   @Column() providedWasmHash: string;
   @Column() zipFilename: string;
+  @Column() zipHash: string;
+  @Column() zipSize: number;
+  @Column({ type: 'binary' }) zipData: Buffer;
   @Column() output: string;
   @CreateDateColumn() createdAt: Date;
 }
