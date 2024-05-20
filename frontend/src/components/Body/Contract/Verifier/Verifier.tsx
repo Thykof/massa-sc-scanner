@@ -1,10 +1,18 @@
 import { Args, Client } from '@massalabs/massa-web3';
-import { Button, DragDrop, formatAmount, toast } from '@massalabs/react-ui-kit';
+import {
+  Button,
+  DragDrop,
+  formatAmount,
+  Spinner,
+  toast,
+} from '@massalabs/react-ui-kit';
 import { useWriteSmartContract } from '@massalabs/react-ui-kit/src/lib/massa-react/hooks/useWriteSmartContract';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiClient, fetchFile } from '../../../../services/apiClient';
+import { apiClient } from '../../../../services/apiClient';
 import { useEffect, useState } from 'react';
 import { AxiosResponse } from 'axios';
+import { DownloadZip } from './DownloadZip';
+import { FiCheckCircle } from 'react-icons/fi';
 
 interface VerifierProps {
   client: Client | undefined;
@@ -30,11 +38,14 @@ export function Verifier(props: VerifierProps) {
   } = props;
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { callSmartContract } = useWriteSmartContract(client, isMainnet);
+  const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
+    client,
+    isMainnet,
+  );
   const {
     data: dataMutate,
     isError,
-    isPending,
+    isPending: verifyIsPending,
     mutate,
   } = useMutation({
     mutationFn: async (file: File) => {
@@ -54,7 +65,7 @@ export function Verifier(props: VerifierProps) {
 
   const url = `${scToInspect}/verified`;
   const { data: dataVerified } = useQuery<VerifiedData, undefined>({
-    queryKey: ['', url],
+    queryKey: [url],
     queryFn: async () => {
       const { data } = await apiClient.get<
         VerifiedData,
@@ -64,35 +75,7 @@ export function Verifier(props: VerifierProps) {
     },
   });
 
-  const { refetch: startZipDownload } = useQuery<Blob>({
-    queryKey: [scToInspect],
-    queryFn: async () => {
-      const response = await fetchFile(`${apiClient.getUri()}/${scToInspect}`);
-      return response;
-    },
-    enabled: false,
-  });
-
-  const handleDownload = () => {
-    startZipDownload().then(({ data }) => {
-      if (data) {
-        const url = URL.createObjectURL(data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `source-code-verified-${scToInspect}.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-    });
-  };
-
   const isVerified = dataVerified?.sourceCodeValid;
-
-  useEffect(() => {
-    if (isPending) {
-      toast('Verifying...');
-    }
-  }, [isPending]);
 
   useEffect(() => {
     if (isError) {
@@ -167,22 +150,33 @@ export function Verifier(props: VerifierProps) {
             ? 'You have to paid to verify this smart contract.'
             : 'Someone has paid to verify this smart contract.'}
         </p>
-        <p>
-          {isVerified
-            ? 'This smart contract has been verified.'
-            : 'This smart contract has not been verified yet.'}
-        </p>
+        <div>
+          {isVerified ? (
+            'This smart contract has been verified.'
+          ) : (
+            <>
+              <p>This smart contract has not been verified yet.</p>
+              <p>
+                Load a zip file with the package.json file at the root and with
+                node node_modules nor build folders.
+              </p>
+            </>
+          )}
+        </div>
       </div>
       <div>
-        <DragDrop onFileLoaded={setSelectedFile} allowed={['zip']} />
+        {!isVerified && (
+          <DragDrop onFileLoaded={setSelectedFile} allowed={['zip']} />
+        )}
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center gap-4">
           <Button
             onClick={handleVerify}
-            disabled={!isPaidVerification || !selectedFile}
+            disabled={!isPaidVerification || !selectedFile || isVerified}
           >
             Verify
+            {verifyIsPending && <Spinner />}
           </Button>
           <Button
             onClick={handlePayToVerify}
@@ -191,17 +185,15 @@ export function Verifier(props: VerifierProps) {
             }
           >
             Pay to verify
+            {isPaidVerification && <FiCheckCircle />}
+            {payIsPending && <Spinner />}
           </Button>
         </div>
         <div className="flex flex-row items-center gap-4">
-          <Button
-            onClick={() => {
-              handleDownload();
-            }}
-            disabled={!isPaidVerification}
-          >
-            Download ZIP
-          </Button>
+          <DownloadZip
+            scToInspect={scToInspect}
+            isPaidVerification={isPaidVerification}
+          />
           <Button onClick={() => {}} disabled={!isPaidVerification || true}>
             See proof (soon)
           </Button>

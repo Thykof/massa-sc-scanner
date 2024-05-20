@@ -65,8 +65,8 @@ export class AppController {
     }
   }
 
-  // curl http://localhost:3000/AS.../download
-  @Get(':address/download')
+  // curl http://localhost:3000/AS.../zip
+  @Get(':address/zip')
   async downloadFile(@Param('address') address: string, @Res() res: Response) {
     const { data, filename } = await this.appService.getVerifiedZip(address);
 
@@ -80,6 +80,42 @@ export class AppController {
     });
 
     res.end(Buffer.from(data.toString('base64'), 'base64'), 'binary');
+  }
+
+  // curl http://localhost:3000/AS.../wasm
+  @Get(':address/wasm')
+  async downloadWasm(@Param('address') address: string, @Res() res: Response) {
+    const data = await this.clientService.address2wasm(address);
+
+    if (!data) {
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    }
+
+    res.set({
+      'Content-Disposition': `attachment; filename="${address}.wasm"`,
+      'Content-Type': 'application/octet-stream',
+    });
+
+    res.end(Buffer.from(data), 'binary');
+  }
+
+  // curl http://localhost:3000/AS.../wat
+  @Get(':address/wat')
+  async downloadWat(@Param('address') address: string, @Res() res: Response) {
+    const data = await this.clientService.wasm2wat(
+      await this.clientService.address2wasm(address),
+    );
+
+    if (!data) {
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    }
+
+    res.set({
+      'Content-Disposition': `attachment; filename="${address}.wat"`,
+      'Content-Type': 'text/plain',
+    });
+
+    res.end(Buffer.from(data));
   }
 
   // curl http://localhost:3000/AS.../verified
@@ -98,13 +134,6 @@ export class AppController {
       functions: await this.functions(address),
       name: await this.name(address),
     };
-  }
-
-  @Get(':address/wasm2wat')
-  async wasm2wat(@Param('address') address: string): Promise<string> {
-    return this.clientService.wasm2wat(
-      await this.clientService.address2wasm(address),
-    );
   }
 
   @Get(':address/abis')
