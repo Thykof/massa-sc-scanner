@@ -106,8 +106,6 @@ export function useReadScanner(scToInspect: string) {
   }, [client, contractAddressVerifier, scToInspect]);
 
   const readIsPaidVerification = useCallback(async () => {
-    console.log('contractAddressVerifier', contractAddressVerifier);
-    console.log('scToInspect', scToInspect);
     const callData = {
       targetAddress: contractAddressVerifier,
       parameter: new Args().addString(scToInspect),

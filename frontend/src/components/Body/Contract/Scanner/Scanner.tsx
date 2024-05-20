@@ -1,6 +1,21 @@
 import { Args, Client } from '@massalabs/massa-web3';
-import { Button, formatAmount } from '@massalabs/react-ui-kit';
+import { Button, formatAmount, Spinner, toast } from '@massalabs/react-ui-kit';
 import { useWriteSmartContract } from '@massalabs/react-ui-kit/src/lib/massa-react/hooks/useWriteSmartContract';
+import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
+import { DownloadWasm } from './DownloadWasm';
+import { DownloadWat } from './DownloadWat';
+import { FiCheckCircle } from 'react-icons/fi';
+import { ScanResult } from './ScanResult';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../../../../services/apiClient';
+import { AxiosResponse } from 'axios';
+
+export interface InspectData {
+  address: string;
+  abis: string[];
+  functions: string[];
+  name: string;
+}
 
 interface ScannerProps {
   client: Client | undefined;
@@ -21,7 +36,29 @@ export function Scanner(props: ScannerProps) {
     scToInspect,
   } = props;
 
-  const { callSmartContract } = useWriteSmartContract(client, isMainnet);
+  const { connectedAccount } = useAccountStore();
+
+  const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
+    client,
+    isMainnet,
+  );
+
+  const url = `${scToInspect}/inspect`;
+  const {
+    data: dataInspect,
+    refetch: startScan,
+    isFetching: scanIsFetching,
+  } = useQuery<InspectData, undefined>({
+    queryKey: [url],
+    queryFn: async () => {
+      const { data } = await apiClient.get<
+        InspectData,
+        AxiosResponse<InspectData>
+      >(url);
+      return data;
+    },
+    enabled: false,
+  });
 
   const handlePayToScan = () => {
     if (!scanPriceOf) {
@@ -45,6 +82,15 @@ export function Scanner(props: ScannerProps) {
     );
   };
 
+  const handleScan = () => {
+    const toastId = toast.loading('Scanning...', {
+      duration: Infinity,
+    });
+    startScan().then(() => {
+      toast.dismiss(toastId);
+    });
+  };
+
   let formattedScanPriceOf = '...';
   if (scanPriceOf) {
     formattedScanPriceOf = formatAmount(
@@ -57,10 +103,6 @@ export function Scanner(props: ScannerProps) {
       <div className="flex flex-col gap-2">
         <h2 className="mas-subtitle">Scanner</h2>
         <p>
-          <i>Scanner is coming soon</i>
-        </p>
-
-        <p>
           The price to scan this smart contract is {formattedScanPriceOf} MAS.
         </p>
         <p>
@@ -71,25 +113,32 @@ export function Scanner(props: ScannerProps) {
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center gap-4">
-          <Button onClick={() => {}} disabled={!isPaidScan}>
-            Scan (soon)
+          <Button onClick={handleScan} disabled={!isPaidScan || scanIsFetching}>
+            Scan
           </Button>
           <Button
             onClick={handlePayToScan}
-            disabled={isPaidScan || !scanPriceOf || !scToInspect}
+            disabled={
+              isPaidScan ||
+              !scanPriceOf ||
+              !scToInspect ||
+              connectedAccount === undefined ||
+              payIsPending
+            }
           >
-            Pay to scan
+            <span>Pay to scan</span>
+            {isPaidScan && <FiCheckCircle />}
+            {payIsPending && <Spinner />}
           </Button>
         </div>
         <div className="flex flex-row items-center gap-4">
-          <Button onClick={() => {}} disabled={!isPaidScan || true}>
-            Download wasm (soon)
-          </Button>
-          <Button onClick={() => {}} disabled={!isPaidScan || true}>
-            Download wat (soon)
-          </Button>
+          <DownloadWasm scToInspect={scToInspect} isPaidScan={isPaidScan} />
+          <DownloadWat scToInspect={scToInspect} isPaidScan={isPaidScan} />
         </div>
       </div>
+      {dataInspect && !scanIsFetching && (
+        <ScanResult dataInspect={dataInspect} />
+      )}
     </div>
   );
 }

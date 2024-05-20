@@ -66,7 +66,7 @@ export class ClientService {
       .smartContracts()
       .readSmartContract({
         targetAddress: this.verifierAddress,
-        targetFunction: 'bytecodeOf',
+        targetFunction: 'getWasm',
         parameter: new Args().addString(address).serialize(),
       });
     if (readOnlyResult.returnValue.length === 0) {
