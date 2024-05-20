@@ -15,7 +15,8 @@ export function FAQ() {
         <p>
           The cost is calculated by multiplying the size of the bytecode and the
           price per byte. When a user pay to scan a smart contract, anyone can
-          request a scan of this smart contract.
+          request a scan of this smart contract. Note that the price include the
+          storage cost (around 0.0062 MAS).
         </p>
       </div>
       <div className="mb-4">
@@ -62,6 +63,7 @@ export function FAQ() {
           The cost is calculated by multiplying the size of the bytecode and the
           price per byte. When a user pay to verify a smart contract, anyone can
           upload a source code zip file if the smart contract is not verified.
+          Note that the price include the storage cost (around 0.0062 MAS).
         </p>
       </div>
       <div className="mb-4">

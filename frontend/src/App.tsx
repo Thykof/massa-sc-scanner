@@ -15,9 +15,12 @@ function App() {
           />
         </div>
         <div className="text-center mb-5">
-          <h1 className="mas-title mb-2">Massa Smart contract Scanner</h1>
+          <h1 className="mas-title mb-2">Massa Smart contract Verifier</h1>
           <h2 className="mas-body">
-            <i>Explore the content of a smart contract.</i>
+            <i>
+              Verify the source code of a smart contract and inspect its
+              content.
+            </i>
           </h2>
         </div>
         <div className="p-10 border-2 rounded-lg mb-4">
