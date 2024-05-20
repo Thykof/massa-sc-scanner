@@ -8,6 +8,7 @@ import * as AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { DatabaseService } from './database/database.service';
+import { UPLOAD_DIR } from './const';
 
 const execPromise = promisify(exec);
 
@@ -29,7 +30,6 @@ export class AppService {
     if (!(await this.clientService.isPaid(address))) {
       throw new HttpException('pay to verify', HttpStatus.FORBIDDEN);
     }
-
     const { zipHash, filename } = this.storeZip(file);
     const deployedWasm = await this.clientService.getWasm(address);
     const deployedWasmHash = this.hashBytes(deployedWasm);
@@ -50,6 +50,9 @@ export class AppService {
       deployedWasmHash,
       providedWasmHash,
       filename,
+      zipHash,
+      file.size,
+      file.buffer,
       output,
     );
     this.databaseService.saveSmartContract(smartContract);
@@ -65,7 +68,21 @@ export class AppService {
     };
   }
 
-  async processZip(
+  async getVerifiedZip(address: string) {
+    const deployedWasm = await this.clientService.getWasm(address);
+    const deployedWasmHash = this.hashBytes(deployedWasm);
+
+    const smartContract = await this.databaseService.getSmartContracts(address);
+    for (const contract of smartContract) {
+      if (contract.deployedWasmHash === deployedWasmHash) {
+        return { data: contract.zipData, filename: contract.zipFilename };
+      }
+    }
+
+    throw new HttpException('not found', HttpStatus.NOT_FOUND);
+  }
+
+  private async processZip(
     file: Express.Multer.File,
     zipHash: string,
     contractName: string,
@@ -77,6 +94,7 @@ export class AppService {
     }
     const workingDir = path.join(outputDir, zipHash);
     zip.extractAllTo(workingDir, true);
+    this.validateZip(workingDir);
 
     let output = '';
 
@@ -120,11 +138,11 @@ export class AppService {
 
   private storeZip(file: Express.Multer.File) {
     const zipHash = this.hashFile(file.buffer);
-    if (!fs.existsSync('./upload')) {
-      fs.mkdirSync('./upload');
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR);
     }
     const filename = `${zipHash}-${new Date().getTime()}.zip`;
-    fs.writeFileSync(`./upload/${filename}`, file.buffer);
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.buffer);
 
     return { zipHash, filename };
   }
@@ -135,5 +153,19 @@ export class AppService {
 
   private hashBytes(bytes: Uint8Array) {
     return crypto.createHash('sha1').update(bytes).digest('hex');
+  }
+
+  private validateZip(directory: string) {
+    if (
+      fs.existsSync(path.join(directory, 'node_modules')) ||
+      fs.existsSync(path.join(directory, 'build')) ||
+      fs.existsSync(path.join(directory, 'dist')) ||
+      !fs.existsSync(path.join(directory, 'assembly'))
+    ) {
+      throw new HttpException(
+        'error processing zip: node_modules',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }
