@@ -65,7 +65,7 @@ export class ClientService {
     const readOnlyResult = await this.client
       .smartContracts()
       .readSmartContract({
-        targetAddress: this.verifierAddress,
+        targetAddress: this.scannerAddress,
         targetFunction: 'getWasm',
         parameter: new Args().addString(address).serialize(),
       });
