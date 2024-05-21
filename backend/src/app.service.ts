@@ -160,7 +160,9 @@ export class AppService {
       fs.existsSync(path.join(directory, 'node_modules')) ||
       fs.existsSync(path.join(directory, 'build')) ||
       fs.existsSync(path.join(directory, 'dist')) ||
-      !fs.existsSync(path.join(directory, 'assembly'))
+      fs.existsSync(path.join(directory, '.env')) ||
+      !fs.existsSync(path.join(directory, 'assembly')) ||
+      !fs.existsSync(path.join(directory, 'package.json'))
     ) {
       throw new HttpException(
         'error processing zip: node_modules',
