@@ -133,8 +133,8 @@ export class AppService {
       // TODO: how to handle the error?
       return { output: stderr + '\n' + stdout };
     } catch (err) {
-      this.logger.error(`Failed to execute command: ...`);
-      // this.logger.error(`Failed to execute command: ${err.message}`);
+      // this.logger.error(`Failed to execute command: ...`);
+      this.logger.error(`Failed to execute command: ${err.message}`);
       throw err;
     }
   }
