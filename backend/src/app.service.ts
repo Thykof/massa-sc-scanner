@@ -102,24 +102,27 @@ export class AppService {
       const result = await this.executeCommand(workingDir, 'npm install');
       output += result.output + '\n';
     } catch (error) {
-      throw new HttpException(
-        'error processing zip: npm install',
-        HttpStatus.BAD_REQUEST,
-      );
+      this.logger.error(`error processing zip: npm install: ${error.message}`);
     }
     try {
       const result = await this.executeCommand(workingDir, 'npm run build');
       output += result.output + '\n';
     } catch (error) {
-      throw new HttpException(
-        'error processing zip: npm run build',
-        HttpStatus.BAD_REQUEST,
+      this.logger.error(
+        `error processing zip: npm run build: ${error.message}`,
       );
     }
 
     const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
-    const binary = fs.readFileSync(binaryPath);
-    const providedWasmHash = this.hashFile(binary);
+    let providedWasmHash = '';
+    try {
+      const binary = fs.readFileSync(binaryPath);
+      providedWasmHash = this.hashFile(binary);
+    } catch (error) {
+      this.logger.error(`error hashing compiled: ${error.message}`);
+    }
+
+    fs.rmdirSync(workingDir, { recursive: true });
 
     return { providedWasmHash, output };
   }
@@ -165,7 +168,7 @@ export class AppService {
       !fs.existsSync(path.join(directory, 'package.json'))
     ) {
       throw new HttpException(
-        'error processing zip: node_modules',
+        'error processing zip: invalid directory structure',
         HttpStatus.BAD_REQUEST,
       );
     }
