@@ -5,14 +5,14 @@ export function GlobalData() {
   const { bytePriceScan, bytePriceVerification } = useReadGlobal();
 
   let formattedBytePriceScan = '...';
-  if (bytePriceScan) {
+  if (bytePriceScan !== undefined) {
     formattedBytePriceScan = formatAmount(
       bytePriceScan.toString(),
     ).amountFormattedFull;
   }
 
   let formattedBytePriceVerification = '...';
-  if (bytePriceVerification) {
+  if (bytePriceVerification !== undefined) {
     formattedBytePriceVerification = formatAmount(
       bytePriceVerification.toString(),
     ).amountFormattedFull;

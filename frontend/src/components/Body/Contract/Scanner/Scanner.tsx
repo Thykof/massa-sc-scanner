@@ -92,7 +92,7 @@ export function Scanner(props: ScannerProps) {
   };
 
   let formattedScanPriceOf = '...';
-  if (scanPriceOf) {
+  if (scanPriceOf !== undefined) {
     formattedScanPriceOf = formatAmount(
       scanPriceOf.toString(),
     ).amountFormattedFull;

@@ -130,7 +130,7 @@ export function Verifier(props: VerifierProps) {
   };
 
   let formattedVerificationPriceOf = '...';
-  if (verificationPriceOf) {
+  if (verificationPriceOf !== undefined) {
     formattedVerificationPriceOf = formatAmount(
       verificationPriceOf.toString(),
     ).amountFormattedFull;
