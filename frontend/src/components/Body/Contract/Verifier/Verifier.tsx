@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { AxiosResponse } from 'axios';
 import { DownloadZip } from './DownloadZip';
 import { FiCheckCircle } from 'react-icons/fi';
+import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
 
 interface VerifierProps {
   client: Client | undefined;
@@ -36,6 +37,7 @@ export function Verifier(props: VerifierProps) {
     contractAddressVerifier,
     scToInspect,
   } = props;
+  const { connectedAccount } = useAccountStore();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
@@ -181,7 +183,11 @@ export function Verifier(props: VerifierProps) {
           <Button
             onClick={handlePayToVerify}
             disabled={
-              isPaidVerification || !verificationPriceOf || !scToInspect
+              isPaidVerification ||
+              !verificationPriceOf ||
+              !scToInspect ||
+              connectedAccount === undefined ||
+              payIsPending
             }
           >
             Pay to verify
