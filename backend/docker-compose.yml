@@ -7,5 +7,15 @@ services:
     container_name: massa-verifier-backend
     ports:
       - '3000:3000'
+    environment:
+      - NODE_ENV=production
     volumes:
       - ./src:/src
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - app
