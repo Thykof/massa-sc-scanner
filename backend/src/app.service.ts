@@ -122,12 +122,15 @@ export class AppService {
       this.logger.error(`error hashing compiled: ${error.message}`);
     }
 
-    fs.rmdirSync(workingDir, { recursive: true });
+    fs.rmSync(workingDir, { recursive: true });
 
     return { providedWasmHash, output };
   }
 
   private async executeCommand(directory: string, command: string) {
+    this.logger.log(
+      `executing command: ${command}, in directory: ${directory}`,
+    );
     try {
       const { stdout, stderr } = await execPromise(command, { cwd: directory });
       // TODO: how to handle the error?
