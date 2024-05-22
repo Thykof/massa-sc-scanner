@@ -99,19 +99,19 @@ export class AppService {
     let output = '';
 
     try {
-      const result = await this.executeCommand(workingDir, 'npm install');
-      output += result.output + '\n';
-    } catch (error) {
-      this.logger.error(`error processing zip: npm install: ${error.message}`);
-    }
-    try {
-      const result = await this.executeCommand(workingDir, 'npm run build');
+      const result = await this.executeCommand(
+        undefined,
+        `cd ${workingDir} && npm install && npm run build`,
+      );
       output += result.output + '\n';
     } catch (error) {
       this.logger.error(
         `error processing zip: npm run build: ${error.message}`,
       );
     }
+
+    this.logger.log('3t command done');
+    this.logger.log(output);
 
     const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
     let providedWasmHash = '';
@@ -127,14 +127,21 @@ export class AppService {
     return { providedWasmHash, output };
   }
 
-  private async executeCommand(directory: string, command: string) {
+  private async executeCommand(directory: string | undefined, command: string) {
     this.logger.log(
       `executing command: ${command}, in directory: ${directory}`,
     );
     try {
-      const { stdout, stderr } = await execPromise(command, { cwd: directory });
+      if (directory) {
+        const { stdout, stderr } = await execPromise(command);
+        return { output: stderr + '\n' + stdout };
+      } else {
+        const { stdout, stderr } = await execPromise(command, {
+          cwd: directory,
+        });
+        return { output: stderr + '\n' + stdout };
+      }
       // TODO: how to handle the error?
-      return { output: stderr + '\n' + stdout };
     } catch (err) {
       // this.logger.error(`Failed to execute command: ...`);
       this.logger.error(`Failed to execute command: ${err.message}`);
