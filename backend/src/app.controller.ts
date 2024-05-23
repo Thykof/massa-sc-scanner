@@ -52,6 +52,7 @@ export class AppController {
     )
     file: Express.Multer.File,
   ) {
+    throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
     try {
       this.logger.log(`verify ${body.address}`);
       return await this.appService.verify(body.address, file);
