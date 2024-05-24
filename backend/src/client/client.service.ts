@@ -124,4 +124,16 @@ export class ClientService {
 
     return matches.map((match) => match[1])[0];
   }
+
+  constants(wat: string): string[] {
+    return wat
+      .split('\n')
+      .filter((l) => l.includes('i32.const') && l.includes('data'))
+      .map((l) => {
+        const lineSlit = l.split('"');
+        if (lineSlit.length < 2) return '';
+        const encodedString = lineSlit[1];
+        return encodedString.split('\\00').join('');
+      });
+  }
 }

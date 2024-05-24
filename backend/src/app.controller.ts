@@ -161,6 +161,7 @@ export class AppController {
       abis: await this.abis(address, chainIdString),
       functions: await this.functions(address, chainIdString),
       name: await this.name(address, chainIdString),
+      constants: await this.constants(address, chainIdString),
     };
   }
 
@@ -195,6 +196,18 @@ export class AppController {
   ): Promise<string> {
     return this.clientService.sourceMapName(
       this.clientService.wasm2utf8(
+        await this.clientService.address2wasm(address, BigInt(chainIdString)),
+      ),
+    );
+  }
+
+  @Get(':address/constants')
+  async constants(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+  ): Promise<string[]> {
+    return this.clientService.constants(
+      this.clientService.wasm2wat(
         await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
