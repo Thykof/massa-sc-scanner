@@ -9,7 +9,7 @@ import { ScanResult } from './ScanResult';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../../services/apiClient';
 import { AxiosResponse } from 'axios';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export interface InspectData {
   address: string;
@@ -25,6 +25,7 @@ interface ScannerProps {
   isPaidScan?: boolean;
   contractAddressScanner: string;
   scToInspect: string;
+  refresh: () => void;
 }
 
 export function Scanner(props: ScannerProps) {
@@ -35,6 +36,7 @@ export function Scanner(props: ScannerProps) {
     isPaidScan,
     contractAddressScanner,
     scToInspect,
+    refresh,
   } = props;
 
   const [connectedAccount, chainId] = useAccountStore((s) => [
@@ -42,10 +44,17 @@ export function Scanner(props: ScannerProps) {
     s.chainId,
   ]);
 
-  const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
-    client,
-    isMainnet,
-  );
+  const {
+    callSmartContract,
+    isPending: payIsPending,
+    isSuccess: payIsSuccess,
+  } = useWriteSmartContract(client, isMainnet);
+
+  useEffect(() => {
+    if (payIsSuccess) {
+      refresh();
+    }
+  }, [payIsSuccess, refresh]);
 
   const url = useMemo(
     () =>
@@ -73,10 +82,6 @@ export function Scanner(props: ScannerProps) {
   const handlePayToScan = () => {
     if (!scanPriceOf) {
       console.error('scanPriceOf is not defined');
-      return;
-    }
-    if (!scToInspect) {
-      console.error('scToInspect is not defined');
       return;
     }
     callSmartContract(

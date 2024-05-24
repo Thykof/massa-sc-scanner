@@ -15,10 +15,19 @@ export function Body() {
     error,
   } = useReadScanner(scToInspect);
 
+  function refresh(sc?: string) {
+    const scToSet = sc || scToInspect;
+    // we want to re set the state to trigger the fetch of the read smart contract and the fetch to the server
+    setScToInspect('');
+    setTimeout(() => {
+      setScToInspect(scToSet);
+    }, 10);
+  }
+
   return (
     <div className="flex flex-col gap-6 border-2 rounded-lg p-10 mb-20">
       <GlobalData />
-      <Form handleSubmit={setScToInspect} disabled={false} />
+      <Form handleSubmit={refresh} />
       {error && (
         <p className="text-red-500">
           This smart contract doesn't exist on the selected network.
@@ -31,6 +40,7 @@ export function Body() {
           verificationPriceOf={verificationPriceOf}
           isPaidVerification={isPaidVerification}
           scToInspect={scToInspect}
+          refresh={refresh}
         />
       )}
     </div>

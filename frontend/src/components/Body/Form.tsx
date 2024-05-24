@@ -3,11 +3,10 @@ import { useState } from 'react';
 
 interface FormProps {
   handleSubmit: (scToInspect: string) => void;
-  disabled: boolean;
 }
 
 export function Form(props: FormProps) {
-  const { handleSubmit, disabled } = props;
+  const { handleSubmit } = props;
 
   const [scToInspect, setScToInspect] = useState('');
 
@@ -21,9 +20,7 @@ export function Form(props: FormProps) {
         />
       </div>
       <div>
-        <Button onClick={() => handleSubmit(scToInspect)} disabled={disabled}>
-          Validate
-        </Button>
+        <Button onClick={() => handleSubmit(scToInspect)}>Validate</Button>
       </div>
     </div>
   );

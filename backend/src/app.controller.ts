@@ -34,7 +34,7 @@ export class AppController {
     private readonly databaseService: DatabaseService,
   ) {}
 
-  // curl -F "file=@smart-contract.zip;type=application/zip" -F "address=AS12FWciBxUsTcbz6xRyKfdcCr6Xbd9qZrVgJQ5n5DUbFCfV3ie61" http://localhost:3000/verify
+  // curl -F "file=@smart-contract.zip;type=application/zip" -F "chainIdString=77658366" -F "address=AS12FWciBxUsTcbz6xRyKfdcCr6Xbd9qZrVgJQ5n5DUbFCfV3ie61" http://localhost:3000/verify
   @Post('verify')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFileAndPassValidation(

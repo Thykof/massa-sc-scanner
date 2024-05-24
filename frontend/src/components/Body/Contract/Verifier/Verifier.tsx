@@ -22,6 +22,7 @@ interface VerifierProps {
   isPaidVerification?: boolean;
   contractAddressVerifier: string;
   scToInspect: string;
+  refresh: () => void;
 }
 
 interface VerifiedData {
@@ -36,6 +37,7 @@ export function Verifier(props: VerifierProps) {
     isPaidVerification,
     contractAddressVerifier,
     scToInspect,
+    refresh,
   } = props;
   const [connectedAccount, chainId] = useAccountStore((s) => [
     s.connectedAccount,
@@ -47,6 +49,13 @@ export function Verifier(props: VerifierProps) {
     isPending: payIsPending,
     isSuccess: payIsSuccess,
   } = useWriteSmartContract(client, isMainnet);
+
+  useEffect(() => {
+    if (payIsSuccess) {
+      refresh();
+    }
+  }, [payIsSuccess, refresh]);
+
   const {
     data: verifyData,
     isError: verifyIsError,
@@ -102,19 +111,16 @@ export function Verifier(props: VerifierProps) {
     if (verifyData) {
       if (verifyData.sourceCodeValid) {
         toast.success('Verification succeeded');
+        refresh();
       } else {
         toast.error('Verification failed');
       }
     }
-  }, [verifyData, verifyIsError]);
+  }, [verifyData, verifyIsError, refresh]);
 
   const handlePayToVerify = () => {
     if (!verificationPriceOf) {
       console.error('scanPriceOf is not defined');
-      return;
-    }
-    if (!scToInspect) {
-      console.error('scToInspect is not defined');
       return;
     }
     callSmartContract(

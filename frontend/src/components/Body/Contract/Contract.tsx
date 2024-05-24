@@ -9,6 +9,7 @@ interface ContractProps {
   verificationPriceOf?: bigint;
   isPaidVerification?: boolean;
   scToInspect: string;
+  refresh: () => void;
 }
 
 export function Contract(props: ContractProps) {
@@ -18,6 +19,7 @@ export function Contract(props: ContractProps) {
     verificationPriceOf,
     isPaidVerification,
     scToInspect,
+    refresh
   } = props;
   const { client, isMainnet, contractAddressScanner, contractAddressVerifier } =
     useClient();
@@ -36,6 +38,7 @@ export function Contract(props: ContractProps) {
           isMainnet={isMainnet}
           contractAddressScanner={contractAddressScanner}
           scToInspect={scToInspect}
+          refresh={refresh}
         />
         <Verifier
           verificationPriceOf={verificationPriceOf}
@@ -44,6 +47,7 @@ export function Contract(props: ContractProps) {
           isMainnet={isMainnet}
           contractAddressVerifier={contractAddressVerifier}
           scToInspect={scToInspect}
+          refresh={refresh}
         />
         <div className="p-5">
           <h2 className="mas-subtitle">Inspect</h2>
