@@ -54,7 +54,7 @@ export class AppController {
     )
     file: Express.Multer.File,
   ) {
-    throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
+    // throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
     try {
       this.logger.log(`verify ${body.address}`);
       return await this.appService.verify(
@@ -72,7 +72,7 @@ export class AppController {
     }
   }
 
-  // curl http://localhost:3000/AS.../zip
+  // curl http://localhost:3000/AS.../zip?chainIdString=77658366
   @Get(':address/zip')
   async downloadFile(
     @Param('address') address: string,
@@ -84,10 +84,6 @@ export class AppController {
       BigInt(chainIdString),
     );
 
-    if (!data) {
-      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
-    }
-
     res.set({
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Type': ZIP_MIME_TYPE,
@@ -96,7 +92,7 @@ export class AppController {
     res.end(Buffer.from(data.toString('base64'), 'base64'), 'binary');
   }
 
-  // curl http://localhost:3000/AS.../wasm
+  // curl http://localhost:3000/AS.../wasm?chainIdString=77658366
   @Get(':address/wasm')
   async downloadWasm(
     @Param('address') address: string,
@@ -120,7 +116,7 @@ export class AppController {
     res.end(Buffer.from(data), 'binary');
   }
 
-  // curl http://localhost:3000/AS.../wat
+  // curl http://localhost:3000/AS.../wat?chainIdString=77658366
   @Get(':address/wat')
   async downloadWat(
     @Param('address') address: string,
@@ -143,7 +139,7 @@ export class AppController {
     res.end(Buffer.from(data));
   }
 
-  // curl http://localhost:3000/AS.../verified
+  // curl http://localhost:3000/AS.../verified?chainIdString=77658366
   @Get(':address/verified')
   async verified(@Param('address') address: string) {
     return {

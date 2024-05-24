@@ -8,7 +8,6 @@ import * as AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { DatabaseService } from './database/database.service';
-import { UPLOAD_DIR } from './const';
 
 const execPromise = promisify(exec);
 
@@ -48,6 +47,14 @@ export class AppService {
       contractName,
     );
 
+    const sourceCodeValid = deployedWasmHash === providedWasmHash;
+    if (!sourceCodeValid) {
+      throw new HttpException(
+        'source code does not match',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const smartContract = new SmartContract(
       address,
       contractName,
@@ -68,7 +75,7 @@ export class AppService {
       address,
       deployedWasmHash,
       providedWasmHash,
-      sourceCodeValid: deployedWasmHash === providedWasmHash,
+      sourceCodeValid,
     };
   }
 
@@ -83,7 +90,7 @@ export class AppService {
       }
     }
 
-    throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    throw new HttpException('File not found', HttpStatus.NOT_FOUND);
   }
 
   private async processZip(
@@ -105,13 +112,11 @@ export class AppService {
     try {
       const result = await this.executeCommand(
         undefined,
-        `cd ${workingDir} && npm install && npm run build`,
+        `cd ${workingDir} && npm pkg delete scripts && npm ci && npm i @massalabs/massa-sc-compiler && npx massa-as-compile`,
       );
       output += result.output + '\n';
     } catch (error) {
-      this.logger.error(
-        `error processing zip: npm run build: ${error.message}`,
-      );
+      this.logger.error(`error processing zip: ${error.message}`);
     }
 
     this.logger.log('3t command done');
@@ -155,11 +160,7 @@ export class AppService {
 
   private storeZip(file: Express.Multer.File) {
     const zipHash = this.hashFile(file.buffer);
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR);
-    }
     const filename = `${zipHash}-${new Date().getTime()}.zip`;
-    fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.buffer);
 
     return { zipHash, filename };
   }
