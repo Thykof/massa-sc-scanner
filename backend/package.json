@@ -20,10 +20,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@massalabs/massa-sc-compiler": "^0.1.0",
-    "assemblyscript": "^0.27.2",
-    "@massalabs/as-transformer": "^0.3.2",
-    "@massalabs/sc-standards": "^0.1.2-dev",
     "@massalabs/massa-web3": "^4.0.2-dev",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.2",
@@ -37,7 +33,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
-    "wasm2wat": "^1.1.1"
+    "wasmparser": "^5.11.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

@@ -8,12 +8,8 @@ import {
   MAINNET_CHAIN_ID,
 } from '@massalabs/massa-web3';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import * as os from 'os';
-import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import * as wasmparser from 'wasmparser';
+import * as wasmdis from 'wasmparser/dist/cjs/WasmDis';
 
 @Injectable()
 export class ClientService {
@@ -22,7 +18,6 @@ export class ClientService {
     scannerAddress: string;
     verifierAddress: string;
   }> {
-    console.log(chainId);
     if (chainId === MAINNET_CHAIN_ID) {
       return {
         client: await ClientFactory.createDefaultClient(
@@ -85,15 +80,19 @@ export class ClientService {
     return readOnlyResult.returnValue;
   }
 
-  async wasm2wat(wasm: Uint8Array): Promise<string> {
-    const dir = os.tmpdir();
-    const filenameWasm = `${dir}/sc.wasm`;
-    fs.writeFileSync(filenameWasm, wasm);
-    const filenameWat = `${dir}/sc.wat`;
-    await execAsync(`wasm2wat ${filenameWasm} -o ${filenameWat}`);
-    const wat = fs.readFileSync(filenameWat, 'utf8');
+  wasm2wat(wasm: Uint8Array): string {
+    const parser = new wasmparser.BinaryReader();
+    parser.setData(wasm.buffer, 0, wasm.length);
+    const namesReader = new wasmdis.NameSectionReader();
+    namesReader.read(parser);
 
-    return wat;
+    parser.setData(wasm.buffer, 0, wasm.length);
+    const dis = new wasmdis.WasmDisassembler();
+    if (namesReader.hasValidNames()) {
+      dis.nameResolver = namesReader.getNameResolver();
+    }
+
+    return dis.disassemble(parser);
   }
 
   wasm2utf8(wasm: Uint8Array): string {

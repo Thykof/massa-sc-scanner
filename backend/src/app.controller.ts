@@ -127,7 +127,7 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
     @Res() res: Response,
   ) {
-    const data = await this.clientService.wasm2wat(
+    const data = this.clientService.wasm2wat(
       await this.clientService.address2wasm(address, BigInt(chainIdString)),
     );
 
@@ -170,7 +170,7 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
   ): Promise<string[]> {
     return this.clientService.importedABIs(
-      await this.clientService.wasm2wat(
+      this.clientService.wasm2wat(
         await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
@@ -182,7 +182,7 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
   ): Promise<string[]> {
     return this.clientService.exportedFunctions(
-      await this.clientService.wasm2wat(
+      this.clientService.wasm2wat(
         await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
