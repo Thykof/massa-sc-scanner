@@ -42,13 +42,14 @@ export function Verifier(props: VerifierProps) {
     s.chainId,
   ]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
-    client,
-    isMainnet,
-  );
   const {
-    data: dataMutate,
-    isError,
+    callSmartContract,
+    isPending: payIsPending,
+    isSuccess: payIsSuccess,
+  } = useWriteSmartContract(client, isMainnet);
+  const {
+    data: verifyData,
+    isError: verifyIsError,
     isPending: verifyIsPending,
     mutate,
   } = useMutation({
@@ -92,21 +93,20 @@ export function Verifier(props: VerifierProps) {
   const isVerified = dataVerified?.sourceCodeValid;
 
   useEffect(() => {
-    if (isError) {
+    if (verifyIsError) {
       toast.error('Verification failed');
     }
-  }, [isError]);
+  }, [verifyIsError]);
 
   useEffect(() => {
-    if (dataMutate) {
-      console.log('File uploaded successfully:', dataMutate);
-      if (dataMutate.sourceCodeValid === false) {
+    if (verifyData) {
+      if (verifyData.sourceCodeValid) {
         toast.success('Verification succeeded');
       } else {
         toast.error('Verification failed');
       }
     }
-  }, [dataMutate, isError]);
+  }, [verifyData, verifyIsError]);
 
   const handlePayToVerify = () => {
     if (!verificationPriceOf) {
@@ -133,9 +133,6 @@ export function Verifier(props: VerifierProps) {
   const handleVerify = () => {
     if (selectedFile) {
       mutate(selectedFile, {
-        onSuccess: (data) => {
-          console.log('File uploaded successfully:', data);
-        },
         onError: (error) => {
           console.error('Error uploading file:', error);
         },
@@ -211,6 +208,7 @@ export function Verifier(props: VerifierProps) {
           <DownloadZip
             scToInspect={scToInspect}
             isPaidVerification={isPaidVerification}
+            isVerified={isVerified}
           />
           <Button onClick={() => {}} disabled={!isPaidVerification || true}>
             See proof (soon)
