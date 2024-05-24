@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchFile } from '../../../../services/apiClient';
 import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
 import { useMemo } from 'react';
-import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 
 interface DownloadWasmProps {
   scToInspect: string;
@@ -15,7 +14,8 @@ export function DownloadWasm(props: DownloadWasmProps) {
   const [chainId] = useAccountStore((s) => [s.chainId]);
 
   const chainIdString = useMemo(
-    () => (chainId ? chainId.toString() : MAINNET_CHAIN_ID.toString()),
+    () =>
+      chainId ? chainId.toString() : import.meta.env.VITE_CHAIN_ID.toString(),
     [chainId],
   );
 

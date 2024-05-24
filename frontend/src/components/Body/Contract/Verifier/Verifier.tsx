@@ -1,4 +1,4 @@
-import { Args, Client, MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
+import { Args, Client } from '@massalabs/massa-web3';
 import {
   Button,
   DragDrop,
@@ -58,7 +58,7 @@ export function Verifier(props: VerifierProps) {
       formData.append('address', scToInspect);
       formData.append(
         'chainIdString',
-        chainId ? chainId.toString() : MAINNET_CHAIN_ID.toString(),
+        chainId ? chainId.toString() : import.meta.env.VITE_CHAIN_ID.toString(),
       );
 
       const response = await apiClient.post('/verify', formData, {
@@ -74,7 +74,7 @@ export function Verifier(props: VerifierProps) {
   const url = useMemo(
     () =>
       `${scToInspect}/verified?chainIdString=${
-        chainId ? chainId?.toString() : MAINNET_CHAIN_ID.toString()
+        chainId ? chainId?.toString() : import.meta.env.VITE_CHAIN_ID.toString()
       }`,
     [scToInspect, chainId],
   );

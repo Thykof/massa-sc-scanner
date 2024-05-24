@@ -1,21 +1,22 @@
+import { useMemo } from 'react';
 import { Button, toast } from '@massalabs/react-ui-kit';
 import { useQuery } from '@tanstack/react-query';
 import { fetchFile } from '../../../../services/apiClient';
 import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
-import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
-import { useMemo } from 'react';
 
 interface DownloadZipProps {
   scToInspect: string;
   isPaidVerification?: boolean;
+  isVerified?: boolean;
 }
 
 export function DownloadZip(props: DownloadZipProps) {
-  const { scToInspect, isPaidVerification } = props;
+  const { scToInspect, isPaidVerification, isVerified } = props;
   const [chainId] = useAccountStore((s) => [s.chainId]);
 
   const chainIdString = useMemo(
-    () => (chainId ? chainId.toString() : MAINNET_CHAIN_ID.toString()),
+    () =>
+      chainId ? chainId.toString() : import.meta.env.VITE_CHAIN_ID.toString(),
     [chainId],
   );
 
@@ -49,7 +50,7 @@ export function DownloadZip(props: DownloadZipProps) {
   return (
     <Button
       onClick={handleDownload}
-      disabled={!isPaidVerification || zipIsFetching}
+      disabled={!isPaidVerification || zipIsFetching || !isVerified}
     >
       Download ZIP
     </Button>

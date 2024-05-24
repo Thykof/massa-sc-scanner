@@ -1,4 +1,4 @@
-import { Args, Client, MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
+import { Args, Client } from '@massalabs/massa-web3';
 import { Button, formatAmount, Spinner, toast } from '@massalabs/react-ui-kit';
 import { useWriteSmartContract } from '@massalabs/react-ui-kit/src/lib/massa-react/hooks/useWriteSmartContract';
 import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
@@ -50,7 +50,7 @@ export function Scanner(props: ScannerProps) {
   const url = useMemo(
     () =>
       `${scToInspect}/inspect?chainIdString=${
-        chainId ? chainId?.toString() : MAINNET_CHAIN_ID.toString()
+        chainId ? chainId?.toString() : import.meta.env.VITE_CHAIN_ID.toString()
       }`,
     [scToInspect, chainId],
   );
