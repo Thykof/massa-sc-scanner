@@ -11,6 +11,7 @@ import {
   Logger,
   HttpException,
   Res,
+  Query,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -21,6 +22,7 @@ import { ZIP_MIME_TYPE } from './const';
 
 class VerifyDto {
   address: string;
+  chainIdString: string;
 }
 
 @Controller()
@@ -55,7 +57,11 @@ export class AppController {
     throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
     try {
       this.logger.log(`verify ${body.address}`);
-      return await this.appService.verify(body.address, file);
+      return await this.appService.verify(
+        body.address,
+        BigInt(body.chainIdString),
+        file,
+      );
     } catch (error) {
       this.logger.error(error.message);
       if (error instanceof HttpException) throw error;
@@ -68,8 +74,15 @@ export class AppController {
 
   // curl http://localhost:3000/AS.../zip
   @Get(':address/zip')
-  async downloadFile(@Param('address') address: string, @Res() res: Response) {
-    const { data, filename } = await this.appService.getVerifiedZip(address);
+  async downloadFile(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+    @Res() res: Response,
+  ) {
+    const { data, filename } = await this.appService.getVerifiedZip(
+      address,
+      BigInt(chainIdString),
+    );
 
     if (!data) {
       throw new HttpException('File not found', HttpStatus.NOT_FOUND);
@@ -85,8 +98,15 @@ export class AppController {
 
   // curl http://localhost:3000/AS.../wasm
   @Get(':address/wasm')
-  async downloadWasm(@Param('address') address: string, @Res() res: Response) {
-    const data = await this.clientService.address2wasm(address);
+  async downloadWasm(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.clientService.address2wasm(
+      address,
+      BigInt(chainIdString),
+    );
 
     if (!data) {
       throw new HttpException('File not found', HttpStatus.NOT_FOUND);
@@ -102,9 +122,13 @@ export class AppController {
 
   // curl http://localhost:3000/AS.../wat
   @Get(':address/wat')
-  async downloadWat(@Param('address') address: string, @Res() res: Response) {
+  async downloadWat(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+    @Res() res: Response,
+  ) {
     const data = await this.clientService.wasm2wat(
-      await this.clientService.address2wasm(address),
+      await this.clientService.address2wasm(address, BigInt(chainIdString)),
     );
 
     if (!data) {
@@ -128,38 +152,50 @@ export class AppController {
   }
 
   @Get(':address/inspect')
-  async inspect(@Param('address') address: string) {
+  async inspect(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+  ) {
     return {
       address,
-      abis: await this.abis(address),
-      functions: await this.functions(address),
-      name: await this.name(address),
+      abis: await this.abis(address, chainIdString),
+      functions: await this.functions(address, chainIdString),
+      name: await this.name(address, chainIdString),
     };
   }
 
   @Get(':address/abis')
-  async abis(@Param('address') address: string): Promise<string[]> {
+  async abis(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+  ): Promise<string[]> {
     return this.clientService.importedABIs(
       await this.clientService.wasm2wat(
-        await this.clientService.address2wasm(address),
+        await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
   }
 
   @Get(':address/functions')
-  async functions(@Param('address') address: string): Promise<string[]> {
+  async functions(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+  ): Promise<string[]> {
     return this.clientService.exportedFunctions(
       await this.clientService.wasm2wat(
-        await this.clientService.address2wasm(address),
+        await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
   }
 
   @Get(':address/name')
-  async name(@Param('address') address: string): Promise<string> {
+  async name(
+    @Param('address') address: string,
+    @Query('chainIdString') chainIdString: string,
+  ): Promise<string> {
     return this.clientService.sourceMapName(
       this.clientService.wasm2utf8(
-        await this.clientService.address2wasm(address),
+        await this.clientService.address2wasm(address, BigInt(chainIdString)),
       ),
     );
   }

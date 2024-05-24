@@ -1,4 +1,4 @@
-import { Args, Client } from '@massalabs/massa-web3';
+import { Args, Client, MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 import {
   Button,
   DragDrop,
@@ -9,7 +9,7 @@ import {
 import { useWriteSmartContract } from '@massalabs/react-ui-kit/src/lib/massa-react/hooks/useWriteSmartContract';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../../services/apiClient';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AxiosResponse } from 'axios';
 import { DownloadZip } from './DownloadZip';
 import { FiCheckCircle } from 'react-icons/fi';
@@ -37,8 +37,10 @@ export function Verifier(props: VerifierProps) {
     contractAddressVerifier,
     scToInspect,
   } = props;
-  const { connectedAccount } = useAccountStore();
-
+  const [connectedAccount, chainId] = useAccountStore((s) => [
+    s.connectedAccount,
+    s.chainId,
+  ]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { callSmartContract, isPending: payIsPending } = useWriteSmartContract(
     client,
@@ -54,6 +56,10 @@ export function Verifier(props: VerifierProps) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('address', scToInspect);
+      formData.append(
+        'chainIdString',
+        chainId ? chainId.toString() : MAINNET_CHAIN_ID.toString(),
+      );
 
       const response = await apiClient.post('/verify', formData, {
         headers: {
@@ -65,7 +71,13 @@ export function Verifier(props: VerifierProps) {
     },
   });
 
-  const url = `${scToInspect}/verified`;
+  const url = useMemo(
+    () =>
+      `${scToInspect}/verified?chainIdString=${
+        chainId ? chainId?.toString() : MAINNET_CHAIN_ID.toString()
+      }`,
+    [scToInspect, chainId],
+  );
   const { data: dataVerified } = useQuery<VerifiedData, undefined>({
     queryKey: [url],
     queryFn: async () => {

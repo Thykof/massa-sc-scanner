@@ -9,7 +9,10 @@ import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWal
 import { useEffect, useMemo, useState } from 'react';
 
 export function useClient() {
-  const { massaClient, chainId } = useAccountStore();
+  const [massaClient, chainId] = useAccountStore((s) => [
+    s.massaClient,
+    s.chainId,
+  ]);
   const [publicClient, setPublicClient] = useState<Client>();
   const defaultIsMainnet = useMemo(
     () => import.meta.env.VITE_CHAIN_ID === MAINNET_CHAIN_ID.toString(),

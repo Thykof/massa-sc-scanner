@@ -1,6 +1,9 @@
 import { Button, toast } from '@massalabs/react-ui-kit';
 import { useQuery } from '@tanstack/react-query';
 import { fetchFile } from '../../../../services/apiClient';
+import { useAccountStore } from '@massalabs/react-ui-kit/src/lib/ConnectMassaWallets';
+import { useMemo } from 'react';
+import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 
 interface DownloadWasmProps {
   scToInspect: string;
@@ -9,12 +12,18 @@ interface DownloadWasmProps {
 
 export function DownloadWasm(props: DownloadWasmProps) {
   const { scToInspect, isPaidScan } = props;
+  const [chainId] = useAccountStore((s) => [s.chainId]);
+
+  const chainIdString = useMemo(
+    () => (chainId ? chainId.toString() : MAINNET_CHAIN_ID.toString()),
+    [chainId],
+  );
 
   const { refetch: startWasmDownload, isFetching: wasmIsFetching } =
     useQuery<Blob>({
-      queryKey: [scToInspect],
+      queryKey: [scToInspect, chainIdString],
       queryFn: async () => {
-        const response = await fetchFile(scToInspect, 'wasm');
+        const response = await fetchFile(scToInspect, 'wasm', chainIdString);
         return response;
       },
       enabled: false,

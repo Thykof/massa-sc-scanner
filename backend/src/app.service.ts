@@ -20,18 +20,22 @@ export class AppService {
     private readonly databaseService: DatabaseService,
   ) {}
 
-  public async verify(address: string, file: Express.Multer.File) {
+  public async verify(
+    address: string,
+    network: bigint,
+    file: Express.Multer.File,
+  ) {
     if (!address) {
       throw new HttpException('address is required', HttpStatus.BAD_REQUEST);
     }
     if (await this.databaseService.isVerified(address)) {
       throw new HttpException('already verified', HttpStatus.FORBIDDEN);
     }
-    if (!(await this.clientService.isPaid(address))) {
+    if (!(await this.clientService.isPaid(address, network))) {
       throw new HttpException('pay to verify', HttpStatus.FORBIDDEN);
     }
     const { zipHash, filename } = this.storeZip(file);
-    const deployedWasm = await this.clientService.getWasm(address);
+    const deployedWasm = await this.clientService.getWasm(address, network);
     const deployedWasmHash = this.hashBytes(deployedWasm);
 
     const contractName = this.clientService.sourceMapName(
@@ -68,8 +72,8 @@ export class AppService {
     };
   }
 
-  async getVerifiedZip(address: string) {
-    const deployedWasm = await this.clientService.getWasm(address);
+  async getVerifiedZip(address: string, network: bigint) {
+    const deployedWasm = await this.clientService.getWasm(address, network);
     const deployedWasmHash = this.hashBytes(deployedWasm);
 
     const smartContract = await this.databaseService.getSmartContracts(address);

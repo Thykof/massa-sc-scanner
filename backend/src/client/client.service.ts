@@ -17,58 +17,64 @@ const execAsync = promisify(exec);
 
 @Injectable()
 export class ClientService {
-  public client: Client;
-  public scannerAddress: string;
-  public verifierAddress: string;
-
-  public async onModuleInit(): Promise<void> {
-    if (process.env.CHAIN_ID === MAINNET_CHAIN_ID.toString()) {
-      this.client = await ClientFactory.createDefaultClient(
-        DefaultProviderUrls.MAINNET,
-        MAINNET_CHAIN_ID,
-      );
-      this.scannerAddress = process.env.SC_ADDRESS_SCANNER_MAINNET;
-      this.verifierAddress = process.env.SC_ADDRESS_VERIFIER_MAINNET;
+  async initClient(chainId: bigint): Promise<{
+    client: Client;
+    scannerAddress: string;
+    verifierAddress: string;
+  }> {
+    console.log(chainId);
+    if (chainId === MAINNET_CHAIN_ID) {
+      return {
+        client: await ClientFactory.createDefaultClient(
+          DefaultProviderUrls.MAINNET,
+          MAINNET_CHAIN_ID,
+        ),
+        scannerAddress: process.env.SC_ADDRESS_SCANNER_MAINNET,
+        verifierAddress: process.env.SC_ADDRESS_VERIFIER_MAINNET,
+      };
     } else {
-      this.client = await ClientFactory.createDefaultClient(
-        DefaultProviderUrls.BUILDNET,
-        BUILDNET_CHAIN_ID,
-      );
-      this.scannerAddress = process.env.SC_ADDRESS_SCANNER_BUILDNET;
-      this.verifierAddress = process.env.SC_ADDRESS_VERIFIER_BUILDNET;
+      return {
+        client: await ClientFactory.createDefaultClient(
+          DefaultProviderUrls.BUILDNET,
+          BUILDNET_CHAIN_ID,
+        ),
+        scannerAddress: process.env.SC_ADDRESS_SCANNER_BUILDNET,
+        verifierAddress: process.env.SC_ADDRESS_VERIFIER_BUILDNET,
+      };
     }
   }
 
-  async isPaid(address: string): Promise<boolean> {
+  async isPaid(address: string, chainId: bigint): Promise<boolean> {
+    const { client, verifierAddress } = await this.initClient(chainId);
     const callData = {
-      targetAddress: this.verifierAddress,
+      targetAddress: verifierAddress,
       parameter: new Args().addString(address),
     };
-    const readOnlyResult = await this.client
+    const readOnlyResult = await client
       .smartContracts()
       .readSmartContract({ ...callData, targetFunction: 'isPaid' });
     return byteToBool(readOnlyResult.returnValue);
   }
 
-  async getWasm(address: string): Promise<Uint8Array> {
+  async getWasm(address: string, chainId: bigint): Promise<Uint8Array> {
+    const { client, verifierAddress } = await this.initClient(chainId);
     const callData = {
-      targetAddress: this.verifierAddress,
+      targetAddress: verifierAddress,
       parameter: new Args().addString(address),
     };
-    const readOnlyResult = await this.client
+    const readOnlyResult = await client
       .smartContracts()
       .readSmartContract({ ...callData, targetFunction: 'getWasm' });
     return readOnlyResult.returnValue;
   }
 
-  async address2wasm(address: string): Promise<Uint8Array> {
-    const readOnlyResult = await this.client
-      .smartContracts()
-      .readSmartContract({
-        targetAddress: this.scannerAddress,
-        targetFunction: 'getWasm',
-        parameter: new Args().addString(address).serialize(),
-      });
+  async address2wasm(address: string, chainId: bigint): Promise<Uint8Array> {
+    const { client, scannerAddress } = await this.initClient(chainId);
+    const readOnlyResult = await client.smartContracts().readSmartContract({
+      targetAddress: scannerAddress,
+      targetFunction: 'getWasm',
+      parameter: new Args().addString(address).serialize(),
+    });
     if (readOnlyResult.returnValue.length === 0) {
       throw new HttpException(
         'Empty bytecode, pay first',
