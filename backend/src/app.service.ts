@@ -107,19 +107,12 @@ export class AppService {
     zip.extractAllTo(workingDir, true);
     this.validateZip(workingDir);
 
-    let output = '';
+    const output = await this.executeCommand(
+      undefined,
+      `cd ${workingDir} && npm cache clean --force && npm pkg delete scripts && npm ci && npx npx massa-as-compile`,
+    );
 
-    try {
-      const result = await this.executeCommand(
-        undefined,
-        `cd ${workingDir} && npm pkg delete scripts && npm ci && npm i @massalabs/massa-sc-compiler && npx massa-as-compile`,
-      );
-      output += result.output + '\n';
-    } catch (error) {
-      this.logger.error(`error processing zip: ${error.message}`);
-    }
-
-    this.logger.log('3t command done');
+    this.logger.log(`output length: ${output.length}`);
     this.logger.log(output);
 
     const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
@@ -136,25 +129,26 @@ export class AppService {
     return { providedWasmHash, output };
   }
 
-  private async executeCommand(directory: string | undefined, command: string) {
+  private async executeCommand(
+    directory: string | undefined,
+    command: string,
+  ): Promise<string> {
     this.logger.log(
       `executing command: ${command}, in directory: ${directory}`,
     );
     try {
       if (directory) {
         const { stdout, stderr } = await execPromise(command);
-        return { output: stderr + '\n' + stdout };
+        return stderr + '\n' + stdout;
       } else {
         const { stdout, stderr } = await execPromise(command, {
           cwd: directory,
         });
-        return { output: stderr + '\n' + stdout };
+        return stderr + '\n' + stdout;
       }
-      // TODO: how to handle the error?
     } catch (err) {
-      // this.logger.error(`Failed to execute command: ...`);
-      this.logger.error(`Failed to execute command: ${err.message}`);
-      throw err;
+      this.logger.error('Failed to execute command');
+      return `Failed to execute command: ${err.message}`;
     }
   }
 
