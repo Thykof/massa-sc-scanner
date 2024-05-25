@@ -67,11 +67,25 @@ export function FAQ() {
         </p>
       </div>
       <div className="mb-4">
+        <strong>What is the expected format of the zip file?</strong>
+        <p>
+          The zip file must contain the package.json file at the root. The npm
+          dependencies must not have high vulnerability. Check the
+          vulnerabilities with the command:
+        </p>
+        <pre>npm audit</pre>
+        <p>
+          The zip archive must not contain the node_modules, .git and build
+          folders. In addition, it must not contains the files: .env. It must
+          contains the folder assembly and the file package.json.
+        </p>
+      </div>
+      <div className="mb-4">
         <strong>How can I see the proof of the verification status?</strong>
         <p>
           To see the proof that the bytecode of a smart contract corresponds to
-          the source code, you will soon be able to download the zip file and
-          the deployed bytecode and perform the commands:
+          the source code, you can download the zip file and the deployed
+          bytecode and perform the commands:
         </p>
         <pre>npm install</pre>
         <pre>npm build</pre>
@@ -90,7 +104,6 @@ export function FAQ() {
               - provide a new source code zip file of a smart contract if the
               deployed smart contract has been updated,
             </li>
-            <li>- download the source code of the smart contract,</li>
             <li>
               - only the address that paid will be able to upload the source
               code zip file,

@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { SmartContract } from './database/entities/SmartContract';
 import { ClientService } from './client/client.service';
 import * as path from 'path';
+import * as os from 'os';
 import * as AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -99,20 +100,19 @@ export class AppService {
     contractName: string,
   ) {
     const zip = new AdmZip(file.buffer);
-    const outputDir = './unzipped';
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir);
-    }
-    const workingDir = path.join(outputDir, zipHash);
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verifier'));
+    const workingDir = path.join(tmpDir, zipHash);
     zip.extractAllTo(workingDir, true);
     this.validateZip(workingDir);
 
-    const output = await this.executeCommand(
-      undefined,
-      `cd ${workingDir} && npm cache clean --force && npm pkg delete scripts && npm ci && npx npx massa-as-compile`,
+    let output = '';
+    output += await this.executeCommand(
+      workingDir,
+      `npm cache clean --force && npm pkg delete scripts && npm ci`,
     );
+    output += await this.runNpmAudit(workingDir);
+    output += await this.executeCommand(workingDir, `npx npx massa-as-compile`);
 
-    this.logger.log(`output length: ${output.length}`);
     this.logger.log(output);
 
     const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
@@ -124,28 +124,23 @@ export class AppService {
       this.logger.error(`error hashing compiled: ${error.message}`);
     }
 
-    fs.rmSync(workingDir, { recursive: true });
+    fs.rmSync(tmpDir, { recursive: true });
 
     return { providedWasmHash, output };
   }
 
   private async executeCommand(
-    directory: string | undefined,
+    directory: string,
     command: string,
   ): Promise<string> {
     this.logger.log(
       `executing command: ${command}, in directory: ${directory}`,
     );
     try {
-      if (directory) {
-        const { stdout, stderr } = await execPromise(command);
-        return stderr + '\n' + stdout;
-      } else {
-        const { stdout, stderr } = await execPromise(command, {
-          cwd: directory,
-        });
-        return stderr + '\n' + stdout;
-      }
+      const { stdout, stderr } = await execPromise(command, {
+        cwd: directory,
+      });
+      return stderr + '\n' + stdout;
     } catch (err) {
       this.logger.error('Failed to execute command');
       return `Failed to execute command: ${err.message}`;
@@ -157,6 +152,27 @@ export class AppService {
     const filename = `${zipHash}-${new Date().getTime()}.zip`;
 
     return { zipHash, filename };
+  }
+
+  private async runNpmAudit(directory: string): Promise<string> {
+    try {
+      this.logger.log('Running npm audit');
+      const { stdout, stderr } = await execPromise(
+        'npm audit fix --force --json',
+        {
+          cwd: directory,
+        },
+      );
+      const auditReport = JSON.parse(stdout);
+      if (auditReport.metadata.vulnerabilities.high > 0) {
+        this.logger.log('Security vulnerabilities found!');
+        throw new Error('Audit failed due to security vulnerabilities.');
+      }
+      return stdout + '\n' + stderr;
+    } catch (error) {
+      this.logger.error(`Failed to run npm audit: ${error.message}`);
+      throw error;
+    }
   }
 
   private hashFile(buffer: Buffer) {
@@ -171,6 +187,7 @@ export class AppService {
     if (
       fs.existsSync(path.join(directory, 'node_modules')) ||
       fs.existsSync(path.join(directory, 'build')) ||
+      fs.existsSync(path.join(directory, '.git')) ||
       fs.existsSync(path.join(directory, 'dist')) ||
       fs.existsSync(path.join(directory, '.env')) ||
       !fs.existsSync(path.join(directory, 'assembly')) ||
