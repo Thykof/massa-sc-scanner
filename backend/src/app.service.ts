@@ -5,7 +5,7 @@ import { SmartContract } from './database/entities/SmartContract';
 import { ClientService } from './client/client.service';
 import * as path from 'path';
 import * as os from 'os';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { DatabaseService } from './database/database.service';
