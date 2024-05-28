@@ -4,7 +4,7 @@
 
 ## Description
 
-This is a simple smart contract scanner for the Massa Blockchain.
+This is a simple smart contract scanner and verifier for the Massa Blockchain.
 
 ## Usage
 
@@ -14,17 +14,21 @@ The fees are calculated by the following formula: size of the bytecode \* price 
 
 The owner of the smart contract can change the price per byte.
 
-## Roadmap
+## Features
 
 - download the wasm bytecode
 - download the wasm text file (wat)
 - see the imported ABI functions
 - see the export smart contract function
 - see the source map file name
+- upload a zip with source code to verify the smart contract bytecode
+- download the source code zip after verification
+
+## Roadmap
+
+- improve the feature to extract the constant value from the smart contract bytecode
 - see the smart contract storage
 - readonly the smart contract exported function
-
-Later, I will develop a service to verify the smart contract source code.
 
 ## FAQ
 

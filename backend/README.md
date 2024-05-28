@@ -1,28 +1,6 @@
 # Mass Sc Scanner - Backend
 
-## API spec
-
-- /wasm2wat/:address
-  - POST
-    - Request
-      - body: { wasm: string }
-    - Response
-      - body: { wat: string }
-- /inspect/:address
-  - POST
-    - Request
-      - body: { wasm: string }
-    - Response
-      - body: { abis: string[], functions: string[], name: ?string }
-- /verify
-  - POST
-    - Request
-      - file: { zip }
-      - body: { contractAddress: string }
-    - Response
-      - body: { valid: boolean, message: string }
-
-## Deploy
+## Deploy into a VPS
 
 ```
 sudo apt update
