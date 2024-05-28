@@ -34,11 +34,6 @@ export function FAQ() {
         <div>
           The next features will allow you to:
           <ul>
-            <li>- download the wasm bytecode,</li>
-            <li>- download the wasm text file (wat),</li>
-            <li>- see the imported ABI functions,</li>
-            <li>- see the export smart contract function,</li>
-            <li>- see the source map file name,</li>
             <li>- see the smart contract storage,</li>
             <li>- readonly the smart contract exported function.</li>
           </ul>
