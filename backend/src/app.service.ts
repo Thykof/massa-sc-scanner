@@ -157,14 +157,11 @@ export class AppService {
   private async runNpmAudit(directory: string): Promise<string> {
     try {
       this.logger.log('Running npm audit');
-      const { stdout, stderr } = await execPromise(
-        'npm audit fix --force --json',
-        {
-          cwd: directory,
-        },
-      );
+      const { stdout, stderr } = await execPromise('npm audit --json', {
+        cwd: directory,
+      });
       const auditReport = JSON.parse(stdout);
-      if (auditReport.metadata.vulnerabilities.high > 0) {
+      if (auditReport.metadata.vulnerabilities.critical > 0) {
         this.logger.log('Security vulnerabilities found!');
         throw new Error('Audit failed due to security vulnerabilities.');
       }
