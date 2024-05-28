@@ -108,10 +108,10 @@ export class AppService {
     let output = '';
     output += await this.executeCommand(
       workingDir,
-      `npm cache clean --force && npm pkg delete scripts && npm ci`,
+      `npm pkg delete scripts && npm ci`,
     );
     output += await this.runNpmAudit(workingDir);
-    output += await this.executeCommand(workingDir, `npx npx massa-as-compile`);
+    output += await this.executeCommand(workingDir, `npx massa-as-compile`);
 
     this.logger.log(output);
 
@@ -155,21 +155,26 @@ export class AppService {
   }
 
   private async runNpmAudit(directory: string): Promise<string> {
+    let stdout = '';
+    let stderr = '';
     try {
       this.logger.log('Running npm audit');
-      const { stdout, stderr } = await execPromise('npm audit --json', {
+      const child = await execPromise('npm audit --json', {
         cwd: directory,
       });
-      const auditReport = JSON.parse(stdout);
-      if (auditReport.metadata.vulnerabilities.critical > 0) {
-        this.logger.log('Security vulnerabilities found!');
-        throw new Error('Audit failed due to security vulnerabilities.');
-      }
-      return stdout + '\n' + stderr;
+      stdout = child.stdout;
+      stderr = child.stderr;
     } catch (error) {
-      this.logger.error(`Failed to run npm audit: ${error.message}`);
-      throw error;
+      stdout = error.stdout;
+      stderr = error.stderr;
     }
+
+    const auditReport = JSON.parse(stdout);
+    if (auditReport.metadata.vulnerabilities.critical > 0) {
+      this.logger.log('Security vulnerabilities found!');
+      throw new Error('Audit failed due to security vulnerabilities.');
+    }
+    return stdout + '\n' + stderr;
   }
 
   private hashFile(buffer: Buffer) {
