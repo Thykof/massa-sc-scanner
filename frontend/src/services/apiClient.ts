@@ -10,7 +10,7 @@ export const fetchFile = async (
   chainIdString: string,
 ): Promise<Blob> => {
   const response = await axios.get(
-    `${apiClient.getUri()}/${address}/${path}?chainIdString=${chainIdString}`,
+    `${apiClient.getUri()}${address}/${path}?chainIdString=${chainIdString}`,
     {
       responseType: 'blob',
     },
