@@ -13,7 +13,7 @@ import {
   Res,
   Query,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ClientService } from './client/client.service';
 import { AppService } from './app.service';

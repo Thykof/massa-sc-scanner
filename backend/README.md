@@ -1,8 +1,30 @@
 # Mass Sc Scanner - Backend
 
+## Deploy AWS lambda
+
+Create user with policies:
+
+- AWSLambdaFullAccess
+- AmazonAPIGatewayAdministrator
+- AmazonS3FullAccess
+- CloudWatchLogsFullAccess
+- AWSCloudFormationFullAccess
+- IAMFullAccess
+
+```bash
+npm run build
+npm run deploy-lambda
+```
+
+## Deploy to Clever Cloud
+
+Set the environment variables.
+
+Select size XS: 1CPU, 1 GB RAM.
+
 ## Deploy into a VPS
 
-```
+```bash
 sudo apt update
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d your_domain.com

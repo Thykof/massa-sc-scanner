@@ -1,11 +1,22 @@
-service: serverless-example
+service: massa-sc-scanner-verifier
 
-plugins:
-  - serverless-offline
+# plugins:
+#   - serverless-offline
 
 provider:
   name: aws
   runtime: nodejs18.x
+
+package:
+  excludeDevDependencies: true
+  individually: true
+  exclude:
+    - test/**
+    - .gitignore
+    - package-lock.json
+    - .git/**
+    - '*.md'
+    - .aws
 
 functions:
   main:
@@ -14,6 +25,16 @@ functions:
       - http:
           method: ANY
           path: /
+          cors: true
       - http:
           method: ANY
           path: '{proxy+}'
+          cors: true
+
+  inspect:
+    handler: dist/serverless/inspect.handler
+    events:
+      - http:
+          method: GET
+          path: /inspect
+          cors: true

@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Express } from 'express';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { SmartContract } from './database/entities/SmartContract';
@@ -108,7 +109,7 @@ export class AppService {
     let output = '';
     output += await this.executeCommand(
       workingDir,
-      `npm pkg delete scripts && npm ci`,
+      `npm pkg delete scripts && npm ci --omit=dev`,
     );
     output += await this.runNpmAudit(workingDir);
     output += await this.executeCommand(workingDir, `npx massa-as-compile`);
