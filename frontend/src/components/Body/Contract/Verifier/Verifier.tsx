@@ -1,4 +1,4 @@
-import { Args, Client } from '@massalabs/massa-web3';
+import { Args, Client, MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 import {
   Button,
   DragDrop,
@@ -182,7 +182,7 @@ export function Verifier(props: VerifierProps) {
         </div>
       </div>
       <div>
-        {!isVerified && (
+        {!(chainId === MAINNET_CHAIN_ID && isVerified) && (
           <DragDrop onFileLoaded={setSelectedFile} allowed={['zip']} />
         )}
       </div>
@@ -190,7 +190,11 @@ export function Verifier(props: VerifierProps) {
         <div className="flex flex-row items-center gap-4">
           <Button
             onClick={handleVerify}
-            disabled={!isPaidVerification || !selectedFile || isVerified}
+            disabled={
+              !isPaidVerification ||
+              !selectedFile ||
+              (chainId === MAINNET_CHAIN_ID && isVerified)
+            }
           >
             Verify
             {verifyIsPending && <Spinner />}
