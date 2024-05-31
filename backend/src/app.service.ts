@@ -1,47 +1,48 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { Express } from 'express';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { SmartContract } from './database/entities/SmartContract';
-import { ClientService } from './client/client.service';
 import * as path from 'path';
 import * as os from 'os';
 import AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { DatabaseService } from './database/database.service';
+import { sourceMapName, wasm2utf8 } from './services/scanner';
+import { address2wasm, initClient, isPaid } from './services/client';
+import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 
 const execPromise = promisify(exec);
 
 @Injectable()
 export class AppService {
   private readonly logger = new Logger('SERVICE');
-  constructor(
-    private readonly clientService: ClientService,
-    private readonly databaseService: DatabaseService,
-  ) {}
+  constructor(private readonly databaseService: DatabaseService) {}
 
   public async verify(
     address: string,
-    network: bigint,
+    chainId: bigint,
     file: Express.Multer.File,
   ) {
     if (!address) {
       throw new HttpException('address is required', HttpStatus.BAD_REQUEST);
     }
-    if (await this.databaseService.isVerified(address)) {
+    if (
+      chainId === MAINNET_CHAIN_ID &&
+      (await this.databaseService.isVerified(address))
+    ) {
       throw new HttpException('already verified', HttpStatus.FORBIDDEN);
     }
-    if (!(await this.clientService.isPaid(address, network))) {
+    const { client, verifierAddress } = await initClient(chainId);
+
+    if (!(await isPaid(client, verifierAddress, address))) {
       throw new HttpException('pay to verify', HttpStatus.FORBIDDEN);
     }
     const { zipHash, filename } = this.storeZip(file);
-    const deployedWasm = await this.clientService.getWasm(address, network);
+    const deployedWasm = await address2wasm(client, verifierAddress, address);
     const deployedWasmHash = this.hashBytes(deployedWasm);
 
-    const contractName = this.clientService.sourceMapName(
-      this.clientService.wasm2utf8(deployedWasm),
-    );
+    const contractName = sourceMapName(wasm2utf8(deployedWasm));
 
     const { providedWasmHash, output } = await this.processZip(
       file,
@@ -81,8 +82,10 @@ export class AppService {
     };
   }
 
-  async getVerifiedZip(address: string, network: bigint) {
-    const deployedWasm = await this.clientService.getWasm(address, network);
+  async getVerifiedZip(address: string, chainId: bigint) {
+    const { client, verifierAddress } = await initClient(chainId);
+
+    const deployedWasm = await address2wasm(client, verifierAddress, address);
     const deployedWasmHash = this.hashBytes(deployedWasm);
 
     const smartContract = await this.databaseService.getSmartContracts(address);

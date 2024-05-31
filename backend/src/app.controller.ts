@@ -15,10 +15,11 @@ import {
 } from '@nestjs/common';
 import { Response, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ClientService } from './client/client.service';
 import { AppService } from './app.service';
 import { DatabaseService } from './database/database.service';
 import { ZIP_MIME_TYPE } from './const';
+import { scanSmartContract, wasm2wat } from './services/scanner';
+import { address2wasm, initClient } from './services/client';
 
 class VerifyDto {
   address: string;
@@ -30,7 +31,6 @@ export class AppController {
   private readonly logger = new Logger('CONTROLLER');
   constructor(
     private readonly appService: AppService,
-    private readonly clientService: ClientService,
     private readonly databaseService: DatabaseService,
   ) {}
 
@@ -99,10 +99,9 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
     @Res() res: Response,
   ) {
-    const data = await this.clientService.address2wasm(
-      address,
-      BigInt(chainIdString),
-    );
+    const { client, scannerAddress } = await initClient(BigInt(chainIdString));
+
+    const data = await address2wasm(client, scannerAddress, address);
 
     if (!data) {
       throw new HttpException('File not found', HttpStatus.NOT_FOUND);
@@ -123,11 +122,12 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
     @Res() res: Response,
   ) {
-    const data = this.clientService.wasm2wat(
-      await this.clientService.address2wasm(address, BigInt(chainIdString)),
-    );
+    const { client, scannerAddress } = await initClient(BigInt(chainIdString));
 
-    if (!data) {
+    const wasm = await address2wasm(client, scannerAddress, address);
+    const wat = wasm2wat(wasm);
+
+    if (!wat) {
       throw new HttpException('File not found', HttpStatus.NOT_FOUND);
     }
 
@@ -136,7 +136,7 @@ export class AppController {
       'Content-Type': 'text/plain',
     });
 
-    res.end(Buffer.from(data));
+    res.end(Buffer.from(wat));
   }
 
   // curl http://localhost:3000/AS.../verified?chainIdString=77658366
@@ -152,60 +152,6 @@ export class AppController {
     @Param('address') address: string,
     @Query('chainIdString') chainIdString: string,
   ) {
-    return {
-      address,
-      abis: await this.abis(address, chainIdString),
-      functions: await this.functions(address, chainIdString),
-      name: await this.name(address, chainIdString),
-      constants: await this.constants(address, chainIdString),
-    };
-  }
-
-  @Get(':address/abis')
-  async abis(
-    @Param('address') address: string,
-    @Query('chainIdString') chainIdString: string,
-  ): Promise<string[]> {
-    return this.clientService.importedABIs(
-      this.clientService.wasm2wat(
-        await this.clientService.address2wasm(address, BigInt(chainIdString)),
-      ),
-    );
-  }
-
-  @Get(':address/functions')
-  async functions(
-    @Param('address') address: string,
-    @Query('chainIdString') chainIdString: string,
-  ): Promise<string[]> {
-    return this.clientService.exportedFunctions(
-      this.clientService.wasm2wat(
-        await this.clientService.address2wasm(address, BigInt(chainIdString)),
-      ),
-    );
-  }
-
-  @Get(':address/name')
-  async name(
-    @Param('address') address: string,
-    @Query('chainIdString') chainIdString: string,
-  ): Promise<string> {
-    return this.clientService.sourceMapName(
-      this.clientService.wasm2utf8(
-        await this.clientService.address2wasm(address, BigInt(chainIdString)),
-      ),
-    );
-  }
-
-  @Get(':address/constants')
-  async constants(
-    @Param('address') address: string,
-    @Query('chainIdString') chainIdString: string,
-  ): Promise<string[]> {
-    return this.clientService.constants(
-      this.clientService.wasm2wat(
-        await this.clientService.address2wasm(address, BigInt(chainIdString)),
-      ),
-    );
+    return await scanSmartContract(address, chainIdString);
   }
 }
