@@ -112,10 +112,16 @@ export class AppService {
       `npm pkg delete scripts && npm ci --omit=dev`,
     );
     output += await this.runNpmAudit(workingDir);
-    output += await this.executeCommand(workingDir, `npx massa-as-compile`);
+    output += await this.executeCommand(
+      workingDir,
+      'npm install @massalabs/massa-sc-compiler',
+    );
+    output += await this.executeCommand(workingDir, 'npx massa-as-compile');
 
     this.logger.log(output);
 
+    const files = fs.readdirSync(path.join(workingDir, 'build'));
+    this.logger.log(`files in build: ${files}`);
     const binaryPath = path.join(workingDir, 'build', `${contractName}.wasm`);
     let providedWasmHash = '';
     try {
