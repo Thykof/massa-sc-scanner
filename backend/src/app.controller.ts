@@ -4,22 +4,19 @@ import {
   Post,
   Param,
   UploadedFile,
-  ParseFilePipeBuilder,
   HttpStatus,
   UseInterceptors,
   Body,
-  Logger,
   HttpException,
   Res,
   Query,
 } from '@nestjs/common';
 import { Response, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AppService } from './app.service';
-import { DatabaseService } from './database/database.service';
 import { ZIP_MIME_TYPE } from './const';
 import { scanSmartContract, wasm2wat } from './services/scanner';
 import { address2wasm, initClient } from './services/client';
+import { getVerifiedZip, verified, verify } from './services/verifier';
 
 class VerifyDto {
   address: string;
@@ -28,48 +25,15 @@ class VerifyDto {
 
 @Controller()
 export class AppController {
-  private readonly logger = new Logger('CONTROLLER');
-  constructor(
-    private readonly appService: AppService,
-    private readonly databaseService: DatabaseService,
-  ) {}
-
   // curl -F "file=@smart-contract.zip;type=application/zip" -F "chainIdString=77658366" -F "address=AS12FWciBxUsTcbz6xRyKfdcCr6Xbd9qZrVgJQ5n5DUbFCfV3ie61" http://localhost:3000/verify
   @Post('verify')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFileAndPassValidation(
     @Body() body: VerifyDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: ZIP_MIME_TYPE,
-        })
-        .addMaxSizeValidator({
-          maxSize: 1000 * 1000 * 3,
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          fileIsRequired: true,
-        }),
-    )
+    @UploadedFile()
     file: Express.Multer.File,
   ) {
-    // throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
-    try {
-      this.logger.log(`verify ${body.address}`);
-      return await this.appService.verify(
-        body.address,
-        BigInt(body.chainIdString),
-        file,
-      );
-    } catch (error) {
-      this.logger.error(error.message);
-      if (error instanceof HttpException) throw error;
-      throw new HttpException(
-        'internal error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    return await verify(body.address, body.chainIdString, file);
   }
 
   // curl http://localhost:3000/AS.../zip?chainIdString=77658366
@@ -79,7 +43,7 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
     @Res() res: Response,
   ) {
-    const { data, filename } = await this.appService.getVerifiedZip(
+    const { data, filename } = await getVerifiedZip(
       address,
       BigInt(chainIdString),
     );
@@ -142,9 +106,7 @@ export class AppController {
   // curl http://localhost:3000/AS.../verified?chainIdString=77658366
   @Get(':address/verified')
   async verified(@Param('address') address: string) {
-    return {
-      sourceCodeValid: await this.databaseService.isVerified(address),
-    };
+    return await verified(address);
   }
 
   @Get(':address/inspect')

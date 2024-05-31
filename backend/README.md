@@ -1,5 +1,21 @@
 # Mass Sc Scanner - Backend
 
+## Deploy AWS lambda
+
+Create user with policies:
+
+- AWSLambdaFullAccess
+- AmazonAPIGatewayAdministrator
+- AmazonS3FullAccess
+- CloudWatchLogsFullAccess
+- AWSCloudFormationFullAccess
+- IAMFullAccess
+
+```bash
+npm run build
+npm run deploy-lambda
+```
+
 ## Deploy to Clever Cloud
 
 Set the environment variables.

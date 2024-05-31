@@ -2,6 +2,23 @@ import * as wasmparser from 'wasmparser';
 import * as wasmdis from 'wasmparser/dist/cjs/WasmDis';
 import { address2wasm, initClient } from './client';
 
+export async function downloadWat(address: string, chainIdString: string) {
+  const { client, scannerAddress } = await initClient(BigInt(chainIdString));
+
+  const wasm = await address2wasm(client, scannerAddress, address);
+  const wat = wasm2wat(wasm);
+
+  return Buffer.from(wat);
+}
+
+export async function downloadWasm(address: string, chainIdString: string) {
+  const { client, scannerAddress } = await initClient(BigInt(chainIdString));
+
+  const wasm = await address2wasm(client, scannerAddress, address);
+
+  return Buffer.from(wasm);
+}
+
 export function wasm2wat(wasm: Uint8Array): string {
   const parser = new wasmparser.BinaryReader();
   parser.setData(wasm.buffer, 0, wasm.length);
