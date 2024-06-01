@@ -1,0 +1,51 @@
+service: massa-sc-scanner-verifier
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+package:
+  excludeDevDependencies: true
+  individually: true
+  exclude:
+    - test/**
+    - .gitignore
+    - package-lock.json
+    - .git/**
+    - '*.md'
+
+functions:
+  scanner:
+    handler: dist/serverless/scanner.handler
+    events:
+      - http:
+          method: GET
+          path: /scanner
+          cors: true
+      - http:
+          method: GET
+          path: /wat
+          cors: true
+      - http:
+          method: GET
+          path: /wasm
+          cors: true
+  verifier:
+    handler: dist/serverless/verifier.handler
+    timeout: 300
+    events:
+      - http:
+          method: POST
+          path: /verify
+          cors: true
+      - http:
+          method: GET
+          path: /verified
+          cors: true
+      - http:
+          method: GET
+          path: /zip
+          cors: true
