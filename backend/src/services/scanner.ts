@@ -1,6 +1,7 @@
 import * as wasmparser from 'wasmparser';
 import * as wasmdis from 'wasmparser/dist/cjs/WasmDis';
 import { address2wasm, initClient } from './client';
+import axios from 'axios';
 
 export async function downloadWat(address: string, chainIdString: string) {
   const { client, scannerAddress } = await initClient(BigInt(chainIdString));
@@ -135,4 +136,17 @@ export function scanBytecode(bytecode: Uint8Array) {
     declaredTexts: texts(constants),
     usedLibraries: libs(constants),
   };
+}
+
+export async function scanFromMassexplo(opId: string) {
+  console.log(`Inspecting bytecode for operation ${JSON.stringify(opId)}`);
+  const response = await axios.get(
+    `https://api.massexplo.io/operation/${opId}?network=MainNet`,
+  );
+
+  if (response.data.op.data === 'null') {
+    throw new Error('Operation not found');
+  }
+
+  return scanBytecode(Buffer.from(response.data.op.data, 'base64'));
 }
