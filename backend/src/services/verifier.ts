@@ -10,8 +10,12 @@ import { sourceMapName, wasm2utf8 } from './scanner';
 import { address2wasm, initClient, isPaid } from './client';
 import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 import { getVerified, saveSmartContract } from './database';
+import { config } from 'dotenv';
+config();
 
 const execPromise = promisify(exec);
+
+const pathToNode = process.env.APP_NODE_PATH;
 
 export async function downloadZip(address: string, chainIdString: string) {
   const { data } = await getVerifiedZip(address, BigInt(chainIdString));
@@ -48,11 +52,8 @@ export interface ZipFile {
 export async function verify(
   address: string,
   chainIdString: string,
-  file?: ZipFile,
+  file: ZipFile,
 ) {
-  if (!file) {
-    throw new Error('file is required');
-  }
   if (file.mimetype !== 'application/zip') {
     throw new Error('file must be a zip');
   }
@@ -128,18 +129,25 @@ async function processZip(
   validateZip(workingDir);
 
   let output = '';
-  output += await executeCommand(workingDir, `npm pkg delete scripts`);
+  output = (
+    await executeCommand(workingDir, `${pathToNode}/npm pkg delete scripts`)
+  ).output;
   console.log(output);
-  output += await executeCommand(workingDir, `npm ci --omit=dev`);
+  output = (await executeCommand(workingDir, `${pathToNode}/npm ci --omit=dev`))
+    .output;
   console.log(output);
-  output += await runNpmAudit(workingDir);
+  output = await runNpmAudit(workingDir);
   console.log(output);
-  output += await executeCommand(
-    workingDir,
-    'npm install @massalabs/massa-sc-compiler',
-  );
+  output = (
+    await executeCommand(
+      workingDir,
+      `${pathToNode}/npm install @massalabs/massa-sc-compiler`,
+    )
+  ).output;
   console.log(output);
-  output += await executeCommand(workingDir, 'npx massa-as-compile');
+  output = (
+    await executeCommand(workingDir, `${pathToNode}/npx massa-as-compile`)
+  ).output;
   console.log(output);
 
   const files = fs.readdirSync(path.join(workingDir, 'build'));
@@ -158,44 +166,42 @@ async function processZip(
   return { providedWasmHash, output };
 }
 
-async function executeCommand(
-  directory: string,
-  command: string,
-): Promise<string> {
+async function executeCommand(directory: string, command: string) {
   console.log(`executing command: ${command}, in directory: ${directory}`);
+  const nodeModulesBin = path.resolve(directory, 'node_modules', '.bin');
+  const env = {
+    ...process.env,
+    PATH: `${nodeModulesBin}:${pathToNode}:${process.env.PATH}`,
+    NODE_PATH: pathToNode,
+  };
   try {
     const { stdout, stderr } = await execPromise(command, {
       cwd: directory,
+      env,
     });
-    return stderr + '\n' + stdout;
+    return { output: stderr + '\n' + stdout, stdout, stderr };
   } catch (err) {
     console.error('Failed to execute command');
-    return `Failed to execute command: ${err.message}`;
+    return {
+      output: `Failed to execute command: ${err}`,
+      stdout: err.stdout,
+      stderr: err.stderr,
+    };
   }
 }
 
-async function runNpmAudit(directory: string): Promise<string> {
-  let stdout = '';
-  let stderr = '';
-  try {
-    console.log('Running npm audit');
-    const child = await execPromise('npm audit --json', {
-      cwd: directory,
-    });
-    stdout = child.stdout;
-    stderr = child.stderr;
-  } catch (error) {
-    console.error('Failed to run npm audit');
-    stdout = error.stdout;
-    stderr = error.stderr;
-  }
+async function runNpmAudit(workingDir: string): Promise<string> {
+  const { output, stdout } = await executeCommand(
+    workingDir,
+    `${pathToNode}/npm audit --json`,
+  );
 
   const auditReport = JSON.parse(stdout);
   if (auditReport.metadata.vulnerabilities.critical > 0) {
     console.log('Security vulnerabilities found!');
     throw new Error('Audit failed due to security vulnerabilities.');
   }
-  return stdout + '\n' + stderr;
+  return output;
 }
 
 function hashFile(buffer: Buffer) {
