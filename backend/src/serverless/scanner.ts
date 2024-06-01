@@ -2,6 +2,7 @@ import { Handler, APIGatewayProxyEvent } from 'aws-lambda';
 import {
   downloadWasm,
   downloadWat,
+  scanFromMassexplo,
   scanSmartContract,
 } from 'src/services/scanner';
 import { headers } from './common';
@@ -13,6 +14,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
 
   const address = event.queryStringParameters?.address;
   const chainId = event.queryStringParameters?.chainId;
+  const opId = event.queryStringParameters?.opId;
   const path = event.path;
 
   switch (path) {
@@ -21,6 +23,12 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
         statusCode: 200,
         headers,
         body: JSON.stringify(await scanSmartContract(address, chainId)),
+      };
+    case 'scan-from-massexplo':
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(await scanFromMassexplo(opId)),
       };
     case '/wat':
       return {

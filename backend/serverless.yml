@@ -19,7 +19,7 @@ package:
 
 functions:
   scanner:
-    handler: dist/serverless/scanner.handler
+    handler: dist/scanner.handler
     events:
       - http:
           method: GET
@@ -34,7 +34,7 @@ functions:
           path: /wasm
           cors: true
   verifier:
-    handler: dist/serverless/verifier.handler
+    handler: dist/verifier.handler
     timeout: 300
     events:
       - http:
