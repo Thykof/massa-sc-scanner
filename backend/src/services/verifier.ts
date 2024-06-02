@@ -11,11 +11,12 @@ import { address2wasm, initClient, isPaid } from './client';
 import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 import { getVerified, saveSmartContract } from './database';
 import { config } from 'dotenv';
+import { ZIP_MIME_TYPE } from 'src/const';
 config();
 
 const execPromise = promisify(exec);
 
-const pathToNode = process.env.APP_NODE_PATH;
+const pathToNode = process.env.APP_NODE_PATH || process.env.NODE_PATH;
 
 export async function downloadZip(address: string, chainIdString: string) {
   const { data } = await getVerifiedZip(address, BigInt(chainIdString));
@@ -54,7 +55,7 @@ export async function verify(
   chainIdString: string,
   file: ZipFile,
 ) {
-  if (file.mimetype !== 'application/zip') {
+  if (file.mimetype !== ZIP_MIME_TYPE) {
     throw new Error('file must be a zip');
   }
   if (file.size > 1024 * 1024 * 3) {
@@ -72,8 +73,6 @@ export async function verify(
   if (!(await isPaid(client, verifierAddress, address))) {
     throw new Error('pay to verify');
   }
-
-  // TBD: return here
 
   const zipHash = hashFile(file.buffer);
   const filename = `${zipHash}-${new Date().getTime()}.zip`;

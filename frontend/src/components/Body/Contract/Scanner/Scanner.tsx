@@ -58,7 +58,7 @@ export function Scanner(props: ScannerProps) {
 
   const url = useMemo(
     () =>
-      `${scToInspect}/inspect?chainIdString=${
+      `/scanner?address=${scToInspect}&chainId=${
         chainId ? chainId?.toString() : import.meta.env.VITE_CHAIN_ID.toString()
       }`,
     [scToInspect, chainId],

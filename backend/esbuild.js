@@ -7,7 +7,7 @@ require('esbuild')
     logLevel: 'info',
     entryPoints: ['src/serverless/scanner.ts', 'src/serverless/verifier.ts'],
     bundle: true,
-    minify: true,
+    minify: false,
     sourcemap: true,
     platform: 'node',
     target: 'es2020',

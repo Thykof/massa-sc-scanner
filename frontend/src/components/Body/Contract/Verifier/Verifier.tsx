@@ -83,7 +83,7 @@ export function Verifier(props: VerifierProps) {
 
   const url = useMemo(
     () =>
-      `${scToInspect}/verified?chainIdString=${
+      `/verified?address=${scToInspect}&chainId=${
         chainId ? chainId?.toString() : import.meta.env.VITE_CHAIN_ID.toString()
       }`,
     [scToInspect, chainId],

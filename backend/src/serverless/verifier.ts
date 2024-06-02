@@ -1,9 +1,9 @@
 import { Handler, APIGatewayProxyEvent } from 'aws-lambda';
 import { downloadZip, verified, verify } from 'src/services/verifier';
 import * as parser from 'lambda-multipart-parser';
-import { config } from 'dotenv';
 import { headers } from './common';
 import { ZIP_MIME_TYPE } from 'src/const';
+import { config } from 'dotenv';
 config();
 
 export const handler: Handler = async (event: APIGatewayProxyEvent) => {
@@ -14,7 +14,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
   const path = event.path;
 
   switch (path) {
-    case '/verified': // http://localhost:3000/dev/verified?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb
+    case '/verified':
       return {
         statusCode: 200,
         headers,
