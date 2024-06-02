@@ -10,12 +10,12 @@ provider:
 package:
   excludeDevDependencies: true
   individually: true
-  exclude:
-    - test/**
-    - .gitignore
-    - package-lock.json
-    - .git/**
-    - '*.md'
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - '!dist/**'
+    - '!**/.git/**'
+    - 'dist/**'
 
 functions:
   scanner:
@@ -23,29 +23,28 @@ functions:
     events:
       - http:
           method: GET
-          path: /scanner
+          path: /scanner # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/scanner?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true
       - http:
           method: GET
-          path: /wat
+          path: /wat # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wat?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true
       - http:
           method: GET
-          path: /wasm
+          path: /wasm # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wasm?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true
   verifier:
     handler: dist/verifier.handler
-    timeout: 300
     events:
       - http:
           method: POST
-          path: /verify
+          path: /verify # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verify
           cors: true
       - http:
           method: GET
-          path: /verified
+          path: /verified # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verified?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true
       - http:
           method: GET
-          path: /zip
+          path: /zip # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/zip?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true

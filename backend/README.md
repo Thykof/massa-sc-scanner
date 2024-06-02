@@ -11,10 +11,20 @@ Create user with policies:
 - AWSCloudFormationFullAccess
 - IAMFullAccess
 
-```bash
-npm run build
-npm run deploy-lambda
-```
+CLI:
+
+    aws lambda update-function-code \
+        --function-name your-lambda-function-name \
+        --zip-file fileb://path/to/your-lambda.zip
+
+endpoints:
+
+    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/scanner
+    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wat
+    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wasm
+    POST - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verify
+    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verified
+    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/zip
 
 ## Deploy to Clever Cloud
 

@@ -8,7 +8,6 @@
     "install": "npm run build",
     "prebuild": "rimraf dist",
     "build": "./esbuild.js",
-    "postbuild": "cd dist && zip -r scanner.zip scanner.js* && zip -r verifier.zip verifier.js*",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "serverless:dev": "nodemon -e ts -x \"npm run build && npx serverless offline\" -w ./src",
     "serverless": "npx serverless offline",
