@@ -2,6 +2,7 @@ import * as wasmparser from 'wasmparser';
 import * as wasmdis from 'wasmparser/dist/cjs/WasmDis';
 import { address2wasm, initClient } from './client';
 import axios from 'axios';
+import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
 
 export async function downloadWat(address: string, chainIdString: string) {
   const { client, scannerAddress } = await initClient(BigInt(chainIdString));
@@ -138,10 +139,12 @@ export function scanBytecode(bytecode: Uint8Array) {
   };
 }
 
-export async function scanFromMassexplo(opId: string) {
+export async function scanFromMassexplo(opId: string, chainIdString: string) {
   console.log(`Inspecting bytecode for operation ${JSON.stringify(opId)}`);
+  const network =
+    chainIdString === MAINNET_CHAIN_ID.toString() ? 'MainNet' : 'Buildnet';
   const response = await axios.get(
-    `https://api.massexplo.io/operation/${opId}?network=MainNet`,
+    `https://api.massexplo.io/operation/${opId}?network=${network}`,
   );
 
   if (response.data.op.data === 'null') {

@@ -23,6 +23,10 @@ functions:
     events:
       - http:
           method: GET
+          path: /scan-from-massexplo
+          cors: true
+      - http:
+          method: GET
           path: /scanner # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/scanner?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
           cors: true
       - http:
