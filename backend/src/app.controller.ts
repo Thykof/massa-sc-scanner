@@ -10,13 +10,15 @@ import {
   HttpException,
   Res,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ZIP_MIME_TYPE } from './const';
-import { scanSmartContract, wasm2wat } from './services/scanner';
+import { MassexploOp, ZIP_MIME_TYPE } from './const';
+import { scanBytecode, scanSmartContract, wasm2wat } from './services/scanner';
 import { address2wasm, initClient } from './services/client';
 import { getVerifiedZip, verified, verify } from './services/verifier';
+import axios from 'axios';
 
 class VerifyDto {
   address: string;
@@ -115,5 +117,19 @@ export class AppController {
     @Query('chainIdString') chainIdString: string,
   ) {
     return await scanSmartContract(address, chainIdString);
+  }
+
+  @Get('scan-from-massexplo')
+  async inspectBytecode(@Query('opId') opId: string) {
+    console.log(`Inspecting bytecode for operation ${JSON.stringify(opId)}`);
+    const response = await axios.get<MassexploOp>(
+      `https://api.massexplo.io/operation/${opId}?network=MainNet`,
+    );
+
+    if (response.data.op.data === 'null') {
+      throw new BadRequestException('Operation not found');
+    }
+
+    return scanBytecode(Buffer.from(response.data.op.data, 'base64'));
   }
 }
