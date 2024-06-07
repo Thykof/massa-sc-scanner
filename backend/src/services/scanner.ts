@@ -117,12 +117,16 @@ export async function scanSmartContract(
   const { client, scannerAddress } = await initClient(BigInt(chainIdString));
 
   const wasm = await address2wasm(client, scannerAddress, address);
-  const wat = wasm2wat(wasm);
-  const wasmUtf8 = wasm2utf8(wasm);
+
+  return scanBytecode(wasm);
+}
+
+export function scanBytecode(bytecode: Uint8Array) {
+  const wat = wasm2wat(bytecode);
+  const wasmUtf8 = wasm2utf8(bytecode);
   const constants = data(wat);
 
   return {
-    address,
     abis: importedABIs(wat),
     exportedFunctions: exportedFunctions(wat),
     exportedGlobals: exportedGlobals(wat),

@@ -33,6 +33,7 @@
     "@newrelic/native-metrics": "^10.1.1",
     "adm-zip": "^0.5.12",
     "aws-lambda": "^1.0.7",
+    "axios": "^1.7.2",
     "child_process": "^1.0.2",
     "lambda-multipart-parser": "^1.0.1",
     "mongodb-memory-server": "^9.2.0",
