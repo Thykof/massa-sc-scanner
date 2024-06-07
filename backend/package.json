@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node -r newrelic dist/main",
-    "serverless:dev": "nodemon --delay 500 -e ts -x \"npm run build && npx serverless offline\" -w ./src",
+    "serverless:dev": "nodemon -e ts -x \"npm run build && npx serverless offline\" -w ./src",
     "serverless": "npx serverless offline",
     "deploy-lambda": "npx serverless deploy",
     "undeploy-lambda": "npx serverless remove",
@@ -24,6 +24,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@codegenie/serverless-express": "^4.14.1",
+    "@massalabs/massa-sc-compiler": "^0.1.0",
     "@massalabs/massa-web3": "^4.0.2-dev",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.2",

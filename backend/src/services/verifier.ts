@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { SmartContract } from '../database/entities/SmartContract';
 import * as path from 'path';
 import * as os from 'os';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { sourceMapName, wasm2utf8 } from './scanner';
