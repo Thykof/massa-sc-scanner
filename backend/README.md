@@ -11,65 +11,21 @@ Create user with policies:
 - AWSCloudFormationFullAccess
 - IAMFullAccess
 
-CLI:
-
-    aws lambda update-function-code \
-        --function-name your-lambda-function-name \
-        --zip-file fileb://path/to/your-lambda.zip
-
-endpoints:
-
-    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/scanner
-    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wat
-    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/wasm
-    POST - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verify
-    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verified
-    GET - https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/zip
-
 ## Deploy to Clever Cloud
 
 Set the environment variables.
 
+```env
+APP_FOLDER=backend
+APP_FOLDER="backend"
+CC_RUN_COMMAND="cd backend && npm run start:prod"
+DB_URI="mongodb+srv://"
+NEW_RELIC_LICENSE_KEY=
+PORT="8080"
+SC_ADDRESS_SCANNER_BUILDNET="AS12UfKvNapQkEm6AhBvtPo9aWM33f1hjGSsGnfv525xoioBAUj9p"
+SC_ADDRESS_SCANNER_MAINNET="AS121YPZJSZAFy4kss95jez1WRF16o4PRq8GE8HyvpHaQYt2spDE2"
+SC_ADDRESS_VERIFIER_BUILDNET="AS17FjVRDKqCJpA5KogtjoYJLNw8fE5p1ezFcginNS9sfzEPXpZ6"
+SC_ADDRESS_VERIFIER_MAINNET="AS126zKYJS3bH5bkoVSvR6y534iDiZYuUB2R1ZBmB1q2yi8u5GsLC"
+```
+
 Select size XS: 1CPU, 1 GB RAM.
-
-## Deploy into a VPS
-
-```bash
-sudo apt update
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d your_domain.com
-```
-
-Create a `default.conf` file in the `nginx` directory. This file will configure NGINX to reverse proxy requests to your NestJS app.
-
-```nginx
-server {
-    listen 80;
-
-    server_name your_domain.com;
-
-    location / {
-        proxy_pass http://app:3000; # 'app' is the name of the NestJS service in docker-compose
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-In the `nginx` directory, create a `Dockerfile` for the NGINX setup:
-
-```dockerfile
-FROM nginx:alpine
-COPY default.conf /etc/nginx/conf.d/default.conf
-```
-
-```bash
-sudo apt install ufw
-sudo ufw allow OpenSSH
-sudo ufw allow 3000/tcp
-sudo ufw enable
-sudo ufw status
-```

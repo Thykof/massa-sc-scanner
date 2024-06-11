@@ -6,7 +6,7 @@ plugins:
 provider:
   name: aws
   runtime: nodejs18.x
-  timeout: 60000
+  timeout: 900
 
 package:
   excludeDevDependencies: true
