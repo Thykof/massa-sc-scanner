@@ -76,6 +76,15 @@ export function FAQ() {
         </p>
       </div>
       <div className="mb-4">
+        <strong>How long is the verification?</strong>
+        <p>
+          The verification can take up to 3 or 4 minutes. The website will fetch
+          the status every 5 seconds. If the verification is not completed after
+          5 minutes, this is probably because the zip file format is invalid or
+          does not correspond to the deployed smart contract.
+        </p>
+      </div>
+      <div className="mb-4">
         <strong>How can I see the proof of the verification status?</strong>
         <p>
           To see the proof that the bytecode of a smart contract corresponds to
