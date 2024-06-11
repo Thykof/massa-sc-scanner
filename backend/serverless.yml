@@ -7,6 +7,12 @@ provider:
   name: aws
   runtime: nodejs18.x
   timeout: 900
+  environment:
+    DB_URI: ${env:DB_URI}
+    SC_ADDRESS_SCANNER_BUILDNET: AS12UfKvNapQkEm6AhBvtPo9aWM33f1hjGSsGnfv525xoioBAUj9p
+    SC_ADDRESS_SCANNER_MAINNET: AS121YPZJSZAFy4kss95jez1WRF16o4PRq8GE8HyvpHaQYt2spDE2
+    SC_ADDRESS_VERIFIER_BUILDNET: AS17FjVRDKqCJpA5KogtjoYJLNw8fE5p1ezFcginNS9sfzEPXpZ6
+    SC_ADDRESS_VERIFIER_MAINNET: AS126zKYJS3bH5bkoVSvR6y534iDiZYuUB2R1ZBmB1q2yi8u5GsLC
 
 package:
   excludeDevDependencies: true
