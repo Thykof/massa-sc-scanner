@@ -20,13 +20,10 @@ export function FAQ() {
         </p>
       </div>
       <div className="mb-4">
-        <strong>What is the development status?</strong>
+        <strong>How to use it on Massa Buildnet?</strong>
         <p>
-          This is a work in progress. The smart contract is ready for
-          production, but the features to extract useful information from the
-          bytecode are not ready yet. Your payment will be registered in the
-          smart contract, so you can request the scan later (with no additional
-          cost) when more information will be available.
+          To use the scanner and the verifier on the Buildnet, simply connect
+          your wallet with Massa Wallet and Massa Station on the Buildnet.
         </p>
       </div>
       <div className="mb-4">
@@ -65,7 +62,7 @@ export function FAQ() {
         <strong>What is the expected format of the zip file?</strong>
         <p>
           The zip file must contain the package.json file at the root. The npm
-          dependencies must not have high vulnerability. Check the
+          dependencies must not have critical vulnerability. Check the
           vulnerabilities with the command:
         </p>
         <pre>npm audit</pre>
