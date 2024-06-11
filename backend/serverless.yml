@@ -14,7 +14,6 @@ package:
   patterns:
     - '!node_modules/**'
     - '!src/**'
-    - '!dist/**'
     - '!**/.git/**'
     - 'dist/**'
 
