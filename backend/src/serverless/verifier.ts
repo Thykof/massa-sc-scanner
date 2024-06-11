@@ -1,17 +1,16 @@
 import { Handler, APIGatewayProxyEvent } from 'aws-lambda';
 import { downloadZip, verified, verify } from 'src/services/verifier';
-import * as parser from 'lambda-multipart-parser';
 import { headers } from './common';
 import { ZIP_MIME_TYPE } from 'src/const';
 import { config } from 'dotenv';
 config();
 
 export const handler: Handler = async (event: APIGatewayProxyEvent) => {
-  console.log('received event');
-
   const address = event.queryStringParameters?.address;
   const chainId = event.queryStringParameters?.chainId;
   const path = event.path;
+
+  console.log('received event', path);
 
   switch (path) {
     case '/verified':
@@ -21,23 +20,17 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
         body: JSON.stringify(await verified(address)),
       };
     case '/verify':
-      const result = await parser.parse(event);
-      if (result.files.length === 0) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ message: 'No file uploaded' }),
-        };
-      }
-      const file = result.files[0];
+      const body = event.body ? JSON.parse(event.body) : {};
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify(
-          await verify(result.address, result.chainIdString, {
-            buffer: file.content,
-            size: file.content.length,
-            mimetype: file.contentType,
+          await verify(body.address, body.chainId, {
+            buffer: Buffer.from(
+              Object.values(body.zipData as { [key: string]: number }),
+            ),
+            size: body.zipData.length,
+            mimetype: ZIP_MIME_TYPE,
           }),
         ),
       };

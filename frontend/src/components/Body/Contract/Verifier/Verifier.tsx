@@ -58,24 +58,42 @@ export function Verifier(props: VerifierProps) {
 
   const {
     data: verifyData,
-    isError: verifyIsError,
     isPending: verifyIsPending,
     mutate,
   } = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('address', scToInspect);
-      formData.append(
-        'chainIdString',
-        chainId ? chainId.toString() : import.meta.env.VITE_CHAIN_ID.toString(),
-      );
+      const readFileAsArrayBuffer = (file: File): Promise<Uint8Array> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
 
-      const response = await apiClient.post('/verify', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+          reader.onload = (e) => {
+            const arrayBuffer = e.target?.result;
+            if (arrayBuffer instanceof ArrayBuffer) {
+              const bytes = new Uint8Array(arrayBuffer);
+              resolve(bytes);
+            } else {
+              reject(new Error('Failed to read file as ArrayBuffer'));
+            }
+          };
+
+          reader.onerror = (e) => {
+            console.error('Error reading file:', e);
+            reject(new Error('Error reading file'));
+          };
+
+          reader.readAsArrayBuffer(file);
+        });
+      };
+
+      const body = {
+        address: scToInspect,
+        chainId: chainId
+          ? chainId.toString()
+          : import.meta.env.VITE_CHAIN_ID.toString(),
+        zipData: await readFileAsArrayBuffer(file),
+      };
+
+      const response = await apiClient.post('/verify', body, {});
 
       return response.data;
     },
@@ -97,15 +115,10 @@ export function Verifier(props: VerifierProps) {
       >(url);
       return data;
     },
+    refetchInterval: 5000,
   });
 
   const isVerified = dataVerified?.sourceCodeValid;
-
-  useEffect(() => {
-    if (verifyIsError) {
-      toast.error('Verification failed');
-    }
-  }, [verifyIsError]);
 
   useEffect(() => {
     if (verifyData) {
@@ -116,7 +129,7 @@ export function Verifier(props: VerifierProps) {
         toast.error('Verification failed');
       }
     }
-  }, [verifyData, verifyIsError, refresh]);
+  }, [verifyData, refresh]);
 
   const handlePayToVerify = () => {
     if (!verificationPriceOf) {

@@ -6,6 +6,7 @@ plugins:
 provider:
   name: aws
   runtime: nodejs18.x
+  timeout: 60000
 
 package:
   excludeDevDependencies: true
@@ -44,6 +45,7 @@ functions:
           method: POST
           path: /verify # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verify
           cors: true
+          timeout: 50000
       - http:
           method: GET
           path: /verified # https://akb6wfr7s9.execute-api.us-east-1.amazonaws.com/dev/verified?address=AS1pBvN6cMKEEBwFfpQNmfY6hT85XcL2VzJSuAFeHt5Ybvbo7mb&chainId=77658366
