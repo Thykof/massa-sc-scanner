@@ -1,5 +1,5 @@
 import { Handler, APIGatewayProxyEvent } from 'aws-lambda';
-import { downloadZip, verified, verify } from 'src/services/verifier';
+import { downloadZip, isVerified, verify } from 'src/services/verifier';
 import { headers } from './common';
 import { ZIP_MIME_TYPE } from 'src/const';
 import { config } from 'dotenv';
@@ -17,7 +17,9 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(await verified(address)),
+        body: JSON.stringify({
+          sourceCodeValid: await isVerified(address, chainId),
+        }),
       };
     case '/verify':
       const body = event.body ? JSON.parse(event.body) : {};

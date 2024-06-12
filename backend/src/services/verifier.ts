@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import { sourceMapName, wasm2utf8 } from './scanner';
 import { address2wasm, initClient, isPaid } from './client';
 import { MAINNET_CHAIN_ID } from '@massalabs/massa-web3';
-import { getVerified, saveSmartContract } from './database';
+import { getSmartContracts, saveSmartContract } from './database';
 import { config } from 'dotenv';
 import { ZIP_MIME_TYPE } from 'src/const';
 config();
@@ -19,29 +19,36 @@ const execPromise = promisify(exec);
 const isLambda = !!process.env.LAMBDA_TASK_ROOT;
 
 export async function downloadZip(address: string, chainIdString: string) {
-  const { data } = await getVerifiedZip(address, BigInt(chainIdString));
-
-  return Buffer.from(data);
-}
-
-export async function verified(address: string) {
-  return {
-    sourceCodeValid: !!(await getVerified(address)),
-  };
-}
-
-export async function getVerifiedZip(address: string, chainId: bigint) {
-  const { client, verifierAddress } = await initClient(chainId);
-
-  const deployedWasm = await address2wasm(client, verifierAddress, address);
-  const deployedWasmHash = hashBytes(deployedWasm);
-
-  const smartContract = await getVerified(address);
-  if (smartContract && smartContract.deployedWasmHash === deployedWasmHash) {
-    return { data: smartContract.zipData, filename: smartContract.zipFilename };
+  const smartContract = await getVerifiedSmartContract(address, chainIdString);
+  if (!smartContract) {
+    throw new Error('smart contract not found');
   }
 
-  throw new Error('File not found');
+  return Buffer.from(smartContract.zipData);
+}
+
+export async function isVerified(
+  address: string,
+  chainIdString: string,
+): Promise<boolean> {
+  return !!(await getVerifiedSmartContract(address, chainIdString));
+}
+
+async function getVerifiedSmartContract(
+  address: string,
+  chainIdString: string,
+): Promise<SmartContract | undefined> {
+  const chainId = BigInt(chainIdString);
+  const { client, verifierAddress } = await initClient(chainId);
+  const deployedWasm = await address2wasm(client, verifierAddress, address);
+  const expectedHash = hashBytes(deployedWasm);
+  const smartContracts = await getSmartContracts(address);
+  for (const smartContract of smartContracts) {
+    if (smartContract.deployedWasmHash === expectedHash) {
+      return smartContract;
+    }
+  }
+  return undefined;
 }
 
 export interface ZipFile {
@@ -65,7 +72,10 @@ export async function verify(
     throw new Error('address is required');
   }
   const chainId = BigInt(chainIdString);
-  if (chainId === MAINNET_CHAIN_ID && (await getVerified(address))) {
+  if (
+    chainId === MAINNET_CHAIN_ID &&
+    (await isVerified(address, chainIdString))
+  ) {
     throw new Error('already verified');
   }
   const { client, verifierAddress } = await initClient(chainId);

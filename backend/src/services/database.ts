@@ -22,19 +22,10 @@ export async function saveSmartContract(smartContract: SmartContract) {
   return repo.save(smartContract);
 }
 
-export async function getVerified(
+export async function getSmartContracts(
   address: string,
-): Promise<SmartContract | undefined> {
+): Promise<SmartContract[]> {
   await initDataSource();
   const repo = dataSource.getMongoRepository(SmartContract);
-  // TODO: refactor: use the mongo db query to check if the deployedWasmHash is the same as the providedWasmHash
-  const smartContracts = await repo.find({ where: { address } });
-
-  for (const smartContract of smartContracts) {
-    if (smartContract.deployedWasmHash === smartContract.providedWasmHash) {
-      return smartContract;
-    }
-  }
-
-  return undefined;
+  return await repo.find({ where: { address } });
 }

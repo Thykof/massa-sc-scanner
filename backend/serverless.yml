@@ -1,5 +1,7 @@
 service: massa-sc-scanner-verifier
 
+useDotenv: true
+
 plugins:
   - serverless-offline
 
