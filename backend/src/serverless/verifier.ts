@@ -40,7 +40,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent) => {
       return {
         statusCode: 200,
         headers: {
-          ...handler,
+          ...headers,
           'Content-Disposition': `attachment; filename="${address}.zip"`,
           'Content-Type': ZIP_MIME_TYPE,
         },
