@@ -1,9 +1,14 @@
-import { bytesToStr, bytesToU256, bytesToU64 } from '@massalabs/massa-web3';
+import {
+  bytesToI32,
+  bytesToStr,
+  bytesToU256,
+  bytesToU64,
+} from '@massalabs/massa-web3';
 import { getClient } from './lib';
 import { config } from 'dotenv';
 config();
 
-const targetAddress = 'AS';
+const targetAddress = 'AS121YPZJSZAFy4kss95jez1WRF16o4PRq8GE8HyvpHaQYt2spDE2';
 
 const { client } = await getClient(process.env.WALLET_SECRET_KEY!);
 
@@ -27,5 +32,8 @@ for (const k of keys) {
   } catch (error) {}
   try {
     console.log('  entry u64: ', bytesToU64(value!));
+  } catch (error) {}
+  try {
+    console.log('  entry i32: ', bytesToI32(value!));
   } catch (error) {}
 }
