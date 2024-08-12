@@ -16,19 +16,31 @@ The owner of the smart contract can change the price per byte.
 
 ## Features
 
+Scanner:
+
 - download the wasm bytecode
 - download the wasm text file (wat)
 - see the imported ABI functions
 - see the export smart contract function
 - see the source map file name
+- see the constant values
+
+Verifier:
+
 - upload a zip with source code to verify the smart contract bytecode
 - download the source code zip after verification
 
-## Roadmap
+## TODO
 
-- improve the feature to extract the constant value from the smart contract bytecode
+Scanner:
+
 - see the smart contract storage
 - readonly the smart contract exported function
+
+Verifier:
+
+- see the source code in a embedded editor
+- GitHub Action to verify the smart contract
 
 ## FAQ
 
